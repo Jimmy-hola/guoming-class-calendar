@@ -41,8 +41,9 @@
 </style>
 </head>
 <body>
-<header>
-  <h1 id="siteTitle">班級行事曆</h1>
+<header style="position:relative">
+  <a href="print.html" style="color:#fff;font-size:0.78rem;position:absolute;top:14px;right:16px">🖨 紙本進度表</a>
+  <h1 id="siteTitle" style="padding-right:110px">班級行事曆</h1>
   <div class="updated" id="updated"></div>
 </header>
 <div class="filters" id="typeFilters"></div>
@@ -164,8 +165,8 @@ fetch("events.json?v=" + Date.now())
   });
 
 function addDays(iso, n) {
-  const d = new Date(iso + "T00:00:00");
-  d.setDate(d.getDate() + n);
+  const d = new Date(iso + "T00:00:00Z");
+  d.setUTCDate(d.getUTCDate() + n);
   return d.toISOString().slice(0, 10);
 }
 function fmtRange(ev) {

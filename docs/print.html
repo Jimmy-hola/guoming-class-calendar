@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>紙本進度表</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "PingFang TC", "Microsoft JhengHei", "Noto Sans TC", sans-serif; color: #111; background: #e9ecef; }
+
+  /* 螢幕上的工具列（列印時隱藏） */
+  #toolbar { position: sticky; top: 0; background: #1a5276; color: #fff; padding: 10px 16px; display: flex; gap: 12px; align-items: center; z-index: 5; }
+  #toolbar button { border: none; border-radius: 6px; padding: 8px 18px; font-size: 0.95rem; background: #fff; color: #1a5276; font-weight: 700; cursor: pointer; }
+  #toolbar .hint { font-size: 0.8rem; opacity: 0.9; }
+
+  .month { background: #fff; width: 277mm; min-height: 180mm; margin: 16px auto; padding: 6mm 7mm; page-break-after: always; }
+  .month:last-child { page-break-after: auto; }
+  .m-head { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 2.5px solid #111; padding-bottom: 2mm; margin-bottom: 2mm; }
+  .m-head h2 { margin: 0; font-size: 17pt; letter-spacing: 1px; }
+  .m-head .sub { font-size: 9pt; color: #444; }
+
+  table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+  th { border: 1px solid #111; background: #ddd; font-size: 10pt; padding: 1.2mm 0; }
+  td { border: 1px solid #555; vertical-align: top; padding: 1mm 1.2mm; height: 24mm; }
+  td.empty { background: #f5f5f5; }
+  td.closed { background: #e0e0e0; }
+  .dnum { font-weight: 700; font-size: 10pt; }
+  .closed .creason { font-size: 8pt; font-weight: 700; color: #333; margin-top: 1mm; }
+  .note-bar { font-size: 7pt; border: 1px solid #999; background: #f3f3f3; padding: 0 1mm; margin: 0.5mm 0; }
+  .ev { font-size: 7.5pt; line-height: 1.35; margin: 0.4mm 0; }
+  .ev .t { color: #333; }
+  .ev.mock { font-weight: 700; }
+  .ev.round { font-weight: 700; }
+  .ev .scope { font-weight: 400; font-size: 6.8pt; color: #444; }
+  .m-foot { margin-top: 2mm; font-size: 8pt; color: #444; display: flex; justify-content: space-between; }
+
+  @media print {
+    body { background: #fff; }
+    #toolbar { display: none; }
+    .month { margin: 0; width: auto; }
+  }
+  @page { size: A4 landscape; margin: 8mm; }
+</style>
+</head>
+<body>
+<div id="toolbar">
+  <button onclick="window.print()">🖨 列印</button>
+  <span class="hint">列印設定請選「橫向」，每月會自動一頁。貼牆建議每月撕換。</span>
+  <a href="index.html" style="margin-left:auto;color:#fff">← 回線上行事曆</a>
+</div>
+<div id="pages">載入中…</div>
+
+<script>
+const SHORT_SUBJ = { "公民與社會": "公民", "國文/社會": "國社" };
+const short = (s) => SHORT_SUBJ[s] || s;
+
+fetch("events.json?v=" + Date.now())
+  .then((r) => r.json())
+  .then((data) => {
+    document.title = data.site_title + "（紙本進度表）";
+    // 依日期整理事件
+    const byDate = {}, closedDays = {}, noteDays = {};
+    const push = (m, k, v) => (m[k] = m[k] || []).push(v);
+    for (const e of data.events) {
+      if (e.allDay) {
+        // 展開全天區間（end 為不含）
+        let d = e.start;
+        while (d < e.end) {
+          if (e.type === "停課") closedDays[d] = e.title;
+          else push(noteDays, d, e.title);
+          d = addDays(d, 1);
+        }
+      } else {
+        push(byDate, e.start.slice(0, 10), e);
+      }
+    }
+    // 產生每個月
+    const pages = document.getElementById("pages");
+    pages.innerHTML = "";
+    let [y, m] = data.range.start.split("-").map(Number);
+    const [ey, em] = data.range.end.split("-").map(Number);
+    while (y < ey || (y === ey && m <= em)) {
+      pages.appendChild(renderMonth(y, m, data, byDate, closedDays, noteDays));
+      m++; if (m > 12) { m = 1; y++; }
+    }
+  });
+
+function addDays(iso, n) {
+  const d = new Date(iso + "T00:00:00Z");
+  d.setUTCDate(d.getUTCDate() + n);
+  return d.toISOString().slice(0, 10);
+}
+function evLine(e) {
+  const t = e.start.slice(11);
+  if (e.type === "複習卷") {
+    const m = e.title.match(/^(.+?)複習卷 第(\d+)回$/);
+    const scopeLine = (e.detail.split("\n").find((l) => l.startsWith("範圍：")) || "").slice(3);
+    const scope = scopeLine ? `<span class="scope">${scopeLine.slice(0, 16)}</span>` : "";
+    return `<div class="ev round"><span class="t">${t}</span> ${short(m[1])}卷${m[2]} ${scope}</div>`;
+  }
+  if (e.type === "模考") return `<div class="ev mock"><span class="t">${t}</span> ${e.title}</div>`;
+  if (e.type === "暑訓") return `<div class="ev"><span class="t">${t}</span> ${short(e.subject)}暑訓${e.title.split(" ")[1] || ""}</div>`;
+  if (e.type === "正課") return `<div class="ev"><span class="t">${t}</span> ${short(e.subject)}正課</div>`;
+  return `<div class="ev"><span class="t">${t}</span> ${e.title.replace("測驗及輔導", "測驗輔導")}</div>`;
+}
+function renderMonth(y, m, data, byDate, closedDays, noteDays) {
+  const sec = document.createElement("section");
+  sec.className = "month";
+  const mm = String(m).padStart(2, "0");
+  const daysInMonth = new Date(y, m, 0).getDate();
+  let html = `<div class="m-head"><h2>${data.site_title}　${y} 年 ${m} 月</h2><div class="sub">列印日 ${data.generated_at.split(" ")[0]}・線上版以網站為準</div></div>`;
+  html += "<table><thead><tr>" + ["一", "二", "三", "四", "五", "六"].map((w) => `<th>週${w}</th>`).join("") + "</tr></thead><tbody>";
+  // 先找出每一週（週一為首），只含一~六
+  let day = 1;
+  const firstDow = new Date(y, m - 1, 1).getDay(); // 0=日
+  // 該月 1 號是星期幾 → 推回該週的週一日期偏移
+  let cursor = 1 - ((firstDow + 6) % 7); // 該週週一的「日」數（可能 <=0）
+  while (cursor <= daysInMonth) {
+    let row = "", hasContent = false;
+    for (let i = 0; i < 6; i++) { // 一~六
+      const dnum = cursor + i;
+      if (dnum < 1 || dnum > daysInMonth) { row += '<td class="empty"></td>'; continue; }
+      const iso = `${y}-${mm}-${String(dnum).padStart(2, "0")}`;
+      const evs = (byDate[iso] || []).slice().sort((a, b) => a.start.localeCompare(b.start));
+      const closed = closedDays[iso];
+      let cell = `<div class="dnum">${dnum}</div>`;
+      (noteDays[iso] || []).forEach((n) => (cell += `<div class="note-bar">${n}</div>`));
+      if (closed) cell += `<div class="creason">${closed}</div>`;
+      else cell += evs.map(evLine).join("");
+      if (closed || evs.length || (noteDays[iso] || []).length) hasContent = true;
+      row += `<td class="${closed ? "closed" : ""}">${cell}</td>`;
+    }
+    html += `<tr>${row}</tr>`;
+    cursor += 7;
+  }
+  html += "</tbody></table>";
+  html += `<div class="m-foot"><span>粗體＝複習卷／模考　灰底＝停課　（週日未列，無課）</span><span>線上行事曆：jimmy-hola.github.io/guoming-class-calendar</span></div>`;
+  sec.innerHTML = html;
+  return sec;
+}
+</script>
+</body>
+</html>
