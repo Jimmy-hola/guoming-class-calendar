@@ -92,7 +92,6 @@ for (let d = START; d <= END; d = addDays(d, 1)) {
     // 該時段已排複習卷 → 不重複顯示通用的「測驗及輔導／輔測」
     if (!row.subject && reviewSlots.has(`${d}|${row.start_time}`)) continue;
     if (row.activity === "輔測" && reviewSlots.has(`${d}|${row.start_time}`)) continue;
-    if (row.activity === "國社輔測" && reviewSlots.has(`${d}|${row.start_time}`)) continue;
     const title = row.subject ? `${row.subject} ${row.activity}` : row.activity;
     events.push({
       title,
@@ -106,8 +105,13 @@ for (let d = START; d <= END; d = addDays(d, 1)) {
 }
 
 // ---------- 3. 暑訓進度 ----------
+// 模考週佔用的時段：同日同時間的暑訓自動隱藏（模考取代暑訓）
+const mockStart = config["模考週開始"];
+const mockSlots = new Set();
+if (mockStart) for (let i = 0; i < 5; i++) mockSlots.add(`${addDays(mockStart, i)}|${config["模考開始時間"] || "16:00"}`);
 for (const r of selfStudy) {
   if (isClosed(r.date)) continue;
+  if (mockSlots.has(`${r.date}|${r.start_time}`)) continue;
   events.push({
     title: `${r.subject}暑訓 ${r.book_range}`,
     start: `${r.date}T${r.start_time}`,
@@ -119,7 +123,6 @@ for (const r of selfStudy) {
 }
 
 // ---------- 4. 模考週（由設定產生，定案改設定.csv 即可） ----------
-const mockStart = config["模考週開始"];
 if (mockStart) {
   const mockSubjects = [
     { subject: "國文", range: "B1~B2" },
