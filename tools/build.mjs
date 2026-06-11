@@ -38,7 +38,7 @@ const readData = (name) => parseCSV(readFileSync(join(ROOT, "data", name), "utf8
 // ---------- 讀取資料 ----------
 const config = Object.fromEntries(readData("設定.csv").map((r) => [r.key, r.value]));
 const timetable = readData("課表.csv");
-const selfStudy = readData("自修進度.csv");
+const selfStudy = readData("暑訓進度.csv");
 const specialDays = readData("特殊日.csv");
 const reviewCatalog = readData("複習卷清單.csv");
 const reviewSchedule = readData("複習卷進度.csv");
@@ -105,14 +105,14 @@ for (let d = START; d <= END; d = addDays(d, 1)) {
   }
 }
 
-// ---------- 3. 暑期自修進度 ----------
+// ---------- 3. 暑訓進度 ----------
 for (const r of selfStudy) {
   if (isClosed(r.date)) continue;
   events.push({
-    title: `${r.subject}自修 ${r.book_range}`,
+    title: `${r.subject}暑訓 ${r.book_range}`,
     start: `${r.date}T${r.start_time}`,
     end: `${r.date}T${r.end_time}`,
-    type: "自修",
+    type: "暑訓",
     subject: r.subject,
     detail: [`冊別：${r.book_range}`, r.notes && `備註：${r.notes}`].filter(Boolean).join("\n"),
   });
