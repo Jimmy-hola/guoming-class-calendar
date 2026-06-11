@@ -45,6 +45,7 @@ const specialDays = readData("特殊日.csv");
 const reviewCatalog = readData("複習卷清單.csv");
 const reviewSchedule = readData("複習卷進度.csv");
 const importantDays = readData("重要日程.csv");
+const mockExams = readData("高名模考.csv");
 
 const START = config["課表生效日"];
 const END = config["行事曆結束日"];
@@ -83,7 +84,7 @@ for (const r of reviewSchedule) {
 }
 if (missingRounds.length) console.warn("⚠️ 複習卷進度有對不到清單的回次：", missingRounds.join("、"));
 
-// 模考共同科目順序與範圍（一國二英三數四自五社）
+// 暑訓模考科目順序與範圍（一國二英三數四自五社）
 const MOCK_SUBJECTS = [
   { subject: "國文", range: "B1~B2" },
   { subject: "英文", range: "B1~B2" },
@@ -92,24 +93,38 @@ const MOCK_SUBJECTS = [
   { subject: "社會", range: "B1~B2" },
 ];
 
-// ---------- 2. 高名模考週（一～五晚上「測驗及輔導／輔測」時段，全班） ----------
-const mockStart = config["模考週開始"];
-if (mockStart) {
-  MOCK_SUBJECTS.forEach((m, i) => {
-    const d = addDays(mockStart, i);
-    const wd = weekdayOf(d);
-    const slot = timetable.find((r) => r.weekday === wd && (r.activity === "測驗及輔導" || r.activity === "輔測"));
-    const startT = slot ? slot.start_time : "19:30";
-    const endT = slot ? slot.end_time : "20:30";
-    events.push({
-      title: `${m.subject}高名模考（${m.range}）`,
-      start: `${d}T${startT}`,
-      end: `${d}T${endT}`,
-      type: "高名模考",
-      subject: m.subject,
-      detail: `範圍：${m.range}\n於晚上測驗及輔導時段舉行\n（模考週日期若調整，改 設定.csv 的「模考週開始」）`,
-    });
+// ---------- 2. 高名模考（全班，一～五晚上「測驗及輔導／輔測」時段） ----------
+// 每回官方日期為週日，本班提前於該週一～五考完（一國二英三數四自五社），逐場日期在 data/高名模考.csv
+for (const r of mockExams) {
+  const wd = weekdayOf(r.date);
+  const slot = timetable.find((t) => t.weekday === wd && (t.activity === "測驗及輔導" || t.activity === "輔測"));
+  const startT = slot ? slot.start_time : "19:30";
+  const endT = slot ? slot.end_time : "20:30";
+  if (isClosed(r.date)) console.warn(`⚠️ 高名模考 ${r.date} ${r.subject}（${r.round_label}）落在停課日，請調整 高名模考.csv`);
+  events.push({
+    title: `${r.subject}高名模考 ${r.round_label}（${r.range}）`,
+    start: `${r.date}T${startT}`,
+    end: `${r.date}T${endT}`,
+    type: "高名模考",
+    subject: r.subject,
+    detail: [
+      `範圍：${r.range}`,
+      r.paper_provider && `卷別：${r.paper_provider}`,
+      r.official_date && `官方模考日 ${r.official_date}（${weekdayOf(r.official_date)}），本班提前於當週一～五晚上測驗及輔導時段考完`,
+      r.notes && `備註：${r.notes}`,
+      "（日期若調整，改 data/高名模考.csv 對應列）",
+    ].filter(Boolean).join("\n"),
   });
+}
+
+// 模考那週（一～五）不排複習卷；週六照常（既有決策）。違反時提醒。
+const mondayOf = (iso) => addDays(iso, -((new Date(iso + "T00:00:00Z").getUTCDay() + 6) % 7));
+const mockWeeks = new Set(mockExams.map((r) => mondayOf(r.date)));
+for (const r of reviewSchedule) {
+  const dow = new Date(r.date + "T00:00:00Z").getUTCDay();
+  if (dow >= 1 && dow <= 5 && mockWeeks.has(mondayOf(r.date))) {
+    console.warn(`⚠️ 複習卷 ${r.date} ${r.subject} 第${r.round_no}回 落在高名模考週（模考週一～五不考複習卷）`);
+  }
 }
 
 // ---------- 3. 暑訓進度（全天標籤，不標時間；時間放詳情與課表視窗） ----------
