@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 // 產生器：讀取 data/*.csv → 產出 docs/events.json
 // 用法：node tools/build.mjs
+// 行事曆只顯示三大類：暑訓（含暑訓模考）、複習卷＋高名模考、重要日程（含停課與備註）。
+// 每週固定課表（正課、測驗及輔導等）不上行事曆，改由網頁的「課表」視窗顯示（資料一樣來自 課表.csv）。
 import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
@@ -42,6 +44,7 @@ const selfStudy = readData("暑訓進度.csv");
 const specialDays = readData("特殊日.csv");
 const reviewCatalog = readData("複習卷清單.csv");
 const reviewSchedule = readData("複習卷進度.csv");
+const importantDays = readData("重要日程.csv");
 
 const START = config["課表生效日"];
 const END = config["行事曆結束日"];
@@ -62,14 +65,12 @@ const isClosed = (iso) => closures.some((c) => iso >= c.date_start && iso <= (c.
 
 const events = [];
 
-// ---------- 1. 複習卷進度（先建立，供課表去重） ----------
+// ---------- 1. 複習卷進度 ----------
 const catalogIndex = new Map(reviewCatalog.map((r) => [`${r.subject}|${Number(r.round_no)}`, r]));
-const reviewSlots = new Set(); // "date|start_time" → 該時段已有複習卷，抑制課表的通用「測驗及輔導」
 const missingRounds = [];
 for (const r of reviewSchedule) {
   const cat = catalogIndex.get(`${r.subject}|${Number(r.round_no)}`);
   if (!cat) { missingRounds.push(`${r.subject} 第${r.round_no}回`); continue; }
-  reviewSlots.add(`${r.date}|${r.start_time}`);
   const scope = cat.chapter_or_scope || cat.scope_detail || "";
   events.push({
     title: `${r.subject}複習卷 ${cat.round_label}`,
@@ -82,64 +83,65 @@ for (const r of reviewSchedule) {
 }
 if (missingRounds.length) console.warn("⚠️ 複習卷進度有對不到清單的回次：", missingRounds.join("、"));
 
-// ---------- 2. 每週固定課表（生效日起展開，跳過停課） ----------
-for (let d = START; d <= END; d = addDays(d, 1)) {
-  if (isClosed(d)) continue;
-  const wd = weekdayOf(d);
-  for (const row of timetable) {
-    if (row.weekday !== wd) continue;
-    if (row.activity === "休息") continue;
-    // 該時段已排複習卷 → 不重複顯示通用的「測驗及輔導／輔測」
-    if (!row.subject && reviewSlots.has(`${d}|${row.start_time}`)) continue;
-    if (row.activity === "輔測" && reviewSlots.has(`${d}|${row.start_time}`)) continue;
-    const title = row.subject ? `${row.subject} ${row.activity}` : row.activity;
-    events.push({
-      title,
-      start: `${d}T${row.start_time}`,
-      end: `${d}T${row.end_time}`,
-      type: row.activity === "正課" ? "正課" : "測驗",
-      subject: row.subject || "",
-      detail: "",
-    });
-  }
-}
+// 模考共同科目順序與範圍（一國二英三數四自五社）
+const MOCK_SUBJECTS = [
+  { subject: "國文", range: "B1~B2" },
+  { subject: "英文", range: "B1~B2" },
+  { subject: "數學", range: "B1~B2" },
+  { subject: "自然", range: "B1~B3" },
+  { subject: "社會", range: "B1~B2" },
+];
 
-// ---------- 3. 暑訓進度 ----------
-// 模考週佔用的時段：同日同時間的暑訓自動隱藏（模考取代暑訓）
+// ---------- 2. 高名模考週（一～五晚上「測驗及輔導／輔測」時段，全班） ----------
 const mockStart = config["模考週開始"];
-const mockSlots = new Set();
-if (mockStart) for (let i = 0; i < 5; i++) mockSlots.add(`${addDays(mockStart, i)}|${config["模考開始時間"] || "16:00"}`);
-for (const r of selfStudy) {
-  if (isClosed(r.date)) continue;
-  if (mockSlots.has(`${r.date}|${r.start_time}`)) continue;
-  events.push({
-    title: `${r.subject}暑訓 ${r.book_range}`,
-    start: `${r.date}T${r.start_time}`,
-    end: `${r.date}T${r.end_time}`,
-    type: "暑訓",
-    subject: r.subject,
-    detail: [`冊別：${r.book_range}`, r.notes && `備註：${r.notes}`].filter(Boolean).join("\n"),
+if (mockStart) {
+  MOCK_SUBJECTS.forEach((m, i) => {
+    const d = addDays(mockStart, i);
+    const wd = weekdayOf(d);
+    const slot = timetable.find((r) => r.weekday === wd && (r.activity === "測驗及輔導" || r.activity === "輔測"));
+    const startT = slot ? slot.start_time : "19:30";
+    const endT = slot ? slot.end_time : "20:30";
+    events.push({
+      title: `${m.subject}高名模考（${m.range}）`,
+      start: `${d}T${startT}`,
+      end: `${d}T${endT}`,
+      type: "高名模考",
+      subject: m.subject,
+      detail: `範圍：${m.range}\n於晚上測驗及輔導時段舉行\n（模考週日期若調整，改 設定.csv 的「模考週開始」）`,
+    });
   });
 }
 
-// ---------- 4. 模考週（由設定產生，定案改設定.csv 即可） ----------
-if (mockStart) {
-  const mockSubjects = [
-    { subject: "國文", range: "B1~B2" },
-    { subject: "英文", range: "B1~B2" },
-    { subject: "數學", range: "B1~B2" },
-    { subject: "自然", range: "B1~B3" },
-    { subject: "社會", range: "B1~B2" },
-  ];
-  mockSubjects.forEach((m, i) => {
-    const d = addDays(mockStart, i);
+// ---------- 3. 暑訓進度（全天標籤，不標時間；時間放詳情與課表視窗） ----------
+for (const r of selfStudy) {
+  if (isClosed(r.date)) continue;
+  events.push({
+    title: `${r.subject}暑訓 ${r.book_range}`,
+    start: r.date,
+    end: addDays(r.date, 1), // FullCalendar 全天事件 end 為「不含」
+    allDay: true,
+    type: "暑訓",
+    subject: r.subject,
+    detail: [`時間：${r.start_time}～${r.end_time}（僅參加暑訓的學生）`, `冊別：${r.book_range}`, r.notes && `備註：${r.notes}`].filter(Boolean).join("\n"),
+  });
+}
+
+// ---------- 4. 暑訓模考週（僅暑訓學生，下午暑訓時段） ----------
+const summerMockStart = config["暑訓模考週開始"];
+if (summerMockStart) {
+  const t1 = config["暑訓模考開始時間"] || "16:00";
+  const t2 = config["暑訓模考結束時間"] || "17:30";
+  MOCK_SUBJECTS.forEach((m, i) => {
+    const d = addDays(summerMockStart, i);
+    if (isClosed(d)) return;
     events.push({
-      title: `${m.subject}模考（${m.range}）`,
-      start: `${d}T${config["模考開始時間"] || "16:00"}`,
-      end: `${d}T${config["模考結束時間"] || "17:30"}`,
-      type: "模考",
+      title: `${m.subject}暑訓模考（${m.range}）`,
+      start: d,
+      end: addDays(d, 1),
+      allDay: true,
+      type: "暑訓",
       subject: m.subject,
-      detail: `範圍：${m.range}\n（模考週日期若調整，改 設定.csv 的「模考週開始」）`,
+      detail: `時間：${t1}～${t2}（僅參加暑訓的學生）\n範圍：${m.range}\n（暑訓模考週日期若調整，改 設定.csv 的「暑訓模考週開始」）`,
     });
   });
 }
@@ -150,7 +152,7 @@ for (const r of specialDays) {
   events.push({
     title: r.title,
     start: r.date_start,
-    end: addDays(end, 1), // FullCalendar 全天事件 end 為「不含」
+    end: addDays(end, 1),
     allDay: true,
     type: r.type === "停課" ? "停課" : "備註",
     subject: "",
@@ -158,12 +160,41 @@ for (const r of specialDays) {
   });
 }
 
+// ---------- 6. 重要日程（各校段考、學校模考、畢旅、特殊節日等） ----------
+for (const r of importantDays) {
+  if (!r.date_start || !r.title) continue;
+  const end = r.date_end || r.date_start;
+  events.push({
+    title: r.title,
+    start: r.date_start,
+    end: addDays(end, 1),
+    allDay: true,
+    type: "重要日程",
+    subject: "",
+    detail: r.notes || "",
+  });
+}
+
 events.sort((a, b) => (a.start < b.start ? -1 : 1));
+
+// ---------- 課表視窗資料（每週固定課表＋暑訓時段說明） ----------
+const summerDates = selfStudy.map((r) => r.date).sort();
+const summer_info = selfStudy.length
+  ? {
+      start: summerDates[0],
+      end: summerDates[summerDates.length - 1],
+      time: `${selfStudy[0].start_time}～${selfStudy[0].end_time}`,
+      mock_week_start: summerMockStart || "",
+      mock_time: `${config["暑訓模考開始時間"] || "16:00"}～${config["暑訓模考結束時間"] || "17:30"}`,
+    }
+  : null;
 
 const out = {
   site_title: config["網站標題"] || "班級行事曆",
   generated_at: new Date().toLocaleString("zh-TW", { timeZone: "Asia/Taipei", hour12: false }),
   range: { start: START, end: END },
+  timetable,
+  summer_info,
   events,
 };
 writeFileSync(join(ROOT, "docs", "events.json"), JSON.stringify(out, null, 1), "utf8");

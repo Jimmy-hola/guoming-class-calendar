@@ -25,7 +25,7 @@
   .fc .fc-toolbar-title { font-size: 1.05rem; }
   .fc .fc-button { font-size: 0.8rem; padding: 4px 8px; background: #1a5276; border-color: #1a5276; }
   .fc-event { cursor: pointer; font-size: 0.74rem; border: none; }
-  .fc-event.type-模考 { box-shadow: inset 3px 0 0 #b71c1c; font-weight: 700; }
+  .fc-event.type-高名模考 { box-shadow: inset 3px 0 0 #b71c1c; font-weight: 700; }
   /* 詳情視窗 */
   #overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: none; align-items: center; justify-content: center; z-index: 99; padding: 20px; }
   #overlay.show { display: flex; }
@@ -35,6 +35,14 @@
   #modal .body { white-space: pre-wrap; font-size: 0.9rem; line-height: 1.6; }
   #modal .tag { display: inline-block; font-size: 0.72rem; border-radius: 10px; padding: 2px 10px; color: #fff; margin-bottom: 8px; }
   #modal button { margin-top: 14px; width: 100%; padding: 9px; border: none; border-radius: 8px; background: #1a5276; color: #fff; font-size: 0.9rem; cursor: pointer; }
+  /* 課表視窗 */
+  #ttModal { background: #fff; border-radius: 12px; max-width: 440px; width: 100%; padding: 18px 20px; max-height: 85vh; overflow-y: auto; }
+  #ttModal h2 { margin: 0 0 10px; font-size: 1.05rem; }
+  #ttModal .tt-note { background: #fff8e1; border-radius: 8px; padding: 8px 12px; font-size: 0.8rem; line-height: 1.6; margin-bottom: 10px; }
+  #ttModal h3 { margin: 10px 0 4px; font-size: 0.9rem; color: #1a5276; border-bottom: 1px solid #eceff1; padding-bottom: 3px; }
+  #ttModal .tt-row { font-size: 0.85rem; line-height: 1.7; }
+  #ttModal .tt-time { color: var(--muted); font-variant-numeric: tabular-nums; margin-right: 8px; }
+  #ttModal button { margin-top: 14px; width: 100%; padding: 9px; border: none; border-radius: 8px; background: #1a5276; color: #fff; font-size: 0.9rem; cursor: pointer; }
   @media (max-width: 700px) {
     .fc .fc-toolbar { flex-wrap: wrap; gap: 6px; }
   }
@@ -43,7 +51,8 @@
 <body>
 <header style="position:relative">
   <a href="print.html" style="color:#fff;font-size:0.78rem;position:absolute;top:14px;right:16px">🖨 紙本進度表</a>
-  <h1 id="siteTitle" style="padding-right:110px">班級行事曆</h1>
+  <a href="#" id="ttBtn" style="color:#fff;font-size:0.78rem;position:absolute;top:14px;right:120px">📋 課表</a>
+  <h1 id="siteTitle" style="padding-right:180px">班級行事曆</h1>
   <div class="updated" id="updated"></div>
 </header>
 <div class="filters" id="typeFilters"></div>
@@ -60,6 +69,14 @@
   </div>
 </div>
 
+<div id="ttOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.45);display:none;align-items:center;justify-content:center;z-index:99;padding:20px">
+  <div id="ttModal">
+    <h2>每週固定課表</h2>
+    <div id="ttBody">載入中…</div>
+    <button onclick="document.getElementById('ttOverlay').style.display='none'">關閉</button>
+  </div>
+</div>
+
 <script>
 const SUBJECT_COLORS = {
   "國文": "#c0392b", "英文": "#2980b9", "數學": "#8e44ad",
@@ -67,14 +84,14 @@ const SUBJECT_COLORS = {
   "歷史": "#d35400", "地理": "#00838f", "公民與社會": "#ad1457",
   "社會": "#e67e22", "國文/社會": "#795548",
 };
-const TYPE_COLORS = { "測驗": "#607d8b", "正課": "#455a64", "停課": "#9e9e9e", "備註": "#f9a825", "模考": "#d32f2f" };
-const TYPES = ["全部", "正課", "測驗", "暑訓", "複習卷", "模考", "停課與備註"];
+const TYPE_COLORS = { "停課": "#9e9e9e", "備註": "#f9a825", "高名模考": "#d32f2f", "重要日程": "#5e35b1" };
+const TYPES = ["全部", "暑訓", "複習卷", "高名模考", "重要日程", "停課與備註"];
 let activeType = "全部";
 let allEvents = [];
 let calendar;
 
 function colorOf(e) {
-  if (e.type === "停課" || e.type === "備註") return TYPE_COLORS[e.type];
+  if (e.type === "停課" || e.type === "備註" || e.type === "重要日程") return TYPE_COLORS[e.type];
   return SUBJECT_COLORS[e.subject] || TYPE_COLORS[e.type] || "#607d8b";
 }
 function matchType(e) {
@@ -102,6 +119,7 @@ fetch("events.json?v=" + Date.now())
     document.title = data.site_title;
     document.getElementById("updated").textContent = "最後更新：" + data.generated_at;
     allEvents = data.events;
+    renderTimetable(data);
 
     // 類型篩選按鈕
     const tf = document.getElementById("typeFilters");
@@ -184,6 +202,36 @@ function fmtRange(ev) {
 }
 document.getElementById("overlay").addEventListener("click", (e) => {
   if (e.target.id === "overlay") e.target.classList.remove("show");
+});
+
+// ---- 課表視窗 ----
+function renderTimetable(data) {
+  const body = document.getElementById("ttBody");
+  let html = "";
+  if (data.summer_info) {
+    const si = data.summer_info;
+    const md = (iso) => Number(iso.slice(5, 7)) + "/" + Number(iso.slice(8, 10));
+    html += `<div class="tt-note">☀️ 暑訓（僅參加的學生）：${md(si.start)}～${md(si.end)}，${si.time}`;
+    if (si.mock_week_start) html += `<br>暑訓模考週：${md(si.mock_week_start)} 起一週，${si.mock_time}`;
+    html += `</div>`;
+  }
+  const order = ["一", "二", "三", "四", "五", "六", "日"];
+  order.forEach((wd) => {
+    const rows = (data.timetable || []).filter((r) => r.weekday === wd);
+    if (!rows.length) return;
+    html += `<h3>週${wd}</h3>` + rows.map((r) =>
+      `<div class="tt-row"><span class="tt-time">${r.start_time}–${r.end_time}</span>${r.subject ? r.subject + " " : ""}${r.activity}</div>`
+    ).join("");
+  });
+  html += `<div class="tt-note" style="margin-top:10px">複習卷、高名模考等實際考程以行事曆為準；停課日當天課程全部暫停。</div>`;
+  body.innerHTML = html;
+}
+document.getElementById("ttBtn").addEventListener("click", (e) => {
+  e.preventDefault();
+  document.getElementById("ttOverlay").style.display = "flex";
+});
+document.getElementById("ttOverlay").addEventListener("click", (e) => {
+  if (e.target.id === "ttOverlay") e.target.style.display = "none";
 });
 </script>
 </body>

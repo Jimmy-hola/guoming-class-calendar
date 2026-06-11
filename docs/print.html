@@ -98,10 +98,8 @@ function evLine(e) {
     const scope = scopeLine ? `<span class="scope">${scopeLine.slice(0, 16)}</span>` : "";
     return `<div class="ev round"><span class="t">${t}</span> ${short(m[1])}卷${m[2]} ${scope}</div>`;
   }
-  if (e.type === "模考") return `<div class="ev mock"><span class="t">${t}</span> ${e.title}</div>`;
-  if (e.type === "暑訓") return `<div class="ev"><span class="t">${t}</span> ${short(e.subject)}暑訓${e.title.split(" ")[1] || ""}</div>`;
-  if (e.type === "正課") return `<div class="ev"><span class="t">${t}</span> ${short(e.subject)}正課</div>`;
-  return `<div class="ev"><span class="t">${t}</span> ${e.title.replace("測驗及輔導", "測驗輔導")}</div>`;
+  if (e.type === "高名模考") return `<div class="ev mock"><span class="t">${t}</span> ${e.title}</div>`;
+  return `<div class="ev"><span class="t">${t}</span> ${e.title}</div>`;
 }
 function renderMonth(y, m, data, byDate, closedDays, noteDays) {
   const sec = document.createElement("section");
@@ -134,7 +132,7 @@ function renderMonth(y, m, data, byDate, closedDays, noteDays) {
     cursor += 7;
   }
   html += "</tbody></table>";
-  html += `<div class="m-foot"><span>粗體＝複習卷／模考　灰底＝停課　（週日未列，無課）</span><span>線上行事曆：jimmy-hola.github.io/guoming-class-calendar</span></div>`;
+  html += `<div class="m-foot"><span>粗體＝複習卷／高名模考　灰底＝停課　（週日未列，無課；每週固定課表見線上行事曆「課表」）</span><span>線上行事曆：jimmy-hola.github.io/guoming-class-calendar</span></div>`;
   sec.innerHTML = html;
   return sec;
 }

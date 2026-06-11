@@ -1,4 +1,4 @@
-record_id,source_file,review_book_name,subject,variant,round_no,round_label,book_range,unit_code,chapter_or_scope,scope_detail,record_type,confidence,notes
+﻿record_id,source_file,review_book_name,subject,variant,round_no,round_label,book_range,unit_code,chapter_or_scope,scope_detail,record_type,confidence,notes
 review_001,IMG_3277.jpg,理化全乙,理化,乙,1,第1回,3~4冊,單元1,基本測量與科學方法,,unit,high,
 review_002,IMG_3277.jpg,理化全乙,理化,乙,2,第2回,3~4冊,單元2,物質與能,,unit,high,
 review_003,IMG_3277.jpg,理化全乙,理化,乙,3,第3回,3~4冊,單元3,波動與聲音,,unit,high,
