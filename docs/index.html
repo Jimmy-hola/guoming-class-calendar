@@ -259,23 +259,6 @@
     background: #eef6fc;
   }
 
-  .today-summary {
-    margin-top: 14px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: var(--navy);
-    font-size: 1.12rem;
-    line-height: 1.2;
-    font-weight: 700;
-  }
-
-  .today-summary .count {
-    color: var(--teal);
-    font-size: 1.38rem;
-    font-weight: 900;
-  }
-
   .event-stack {
     margin-top: 8px;
     border-top: 0;
@@ -371,24 +354,6 @@
     font-weight: 850;
   }
 
-  .meta-line {
-    margin-top: 6px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px 12px;
-    color: #5b6675;
-    font-size: 0.95rem;
-    line-height: 1.3;
-  }
-
-  .meta-line span {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    min-width: 0;
-  }
-
-  .meta-line:empty,
   .event-side:empty,
   .compact-side:empty {
     display: none;
@@ -663,16 +628,6 @@
     color: #fff;
     font-size: 0.9rem;
     font-weight: 850;
-    white-space: nowrap;
-  }
-
-  .compact-detail {
-    margin-top: 4px;
-    color: var(--muted);
-    font-size: 0.92rem;
-    line-height: 1.3;
-    overflow: hidden;
-    text-overflow: ellipsis;
     white-space: nowrap;
   }
 
@@ -1213,13 +1168,11 @@
     .hero-date { padding-inline: 18px; }
     .date-line h2,
     .weekday-pill { font-size: 1.52rem; }
-    .event-row { grid-template-columns: 62px 5px minmax(0, 1fr); gap: 10px; }
-    .event-side { display: none; }
+    .event-row { grid-template-columns: 62px 5px minmax(0, 1fr) auto; gap: 10px; }
     .time-rail { font-size: 0.98rem; }
     .event-name { font-size: 1.06rem; }
     .subject-tag { min-width: 48px; height: 29px; font-size: 0.92rem; }
-    .compact-event { grid-template-columns: 5px 78px minmax(0, 1fr); gap: 9px; }
-    .compact-side { display: none; }
+    .compact-event { grid-template-columns: 5px 78px minmax(0, 1fr) auto; gap: 9px; }
     .compact-time { font-size: 0.94rem; }
   }
 
@@ -1267,12 +1220,6 @@
           <button class="icon-button" type="button" data-action="shift-date" data-delta="-1" aria-label="前一天"><i data-lucide="chevron-left" size="24"></i></button>
           <button class="icon-button" type="button" data-action="shift-date" data-delta="1" aria-label="後一天"><i data-lucide="chevron-right" size="24"></i></button>
         </div>
-      </div>
-      <div class="today-summary">
-        <i data-lucide="calendar-days"></i>
-        <span id="selectedDayLabel">今天</span>
-        <span class="count" id="selectedDayCount">0</span>
-        <span>個行程</span>
       </div>
       <div class="event-stack" id="todayEvents"></div>
     </section>
@@ -1652,8 +1599,6 @@ function renderHero() {
   const dayEvents = eventsForDate(state.selectedDate, false);
   el("selectedDateTitle").textContent = `${selected.getMonth() + 1}月${selected.getDate()}日`;
   el("weekdayPill").textContent = "週" + WEEKDAY_LABELS[selected.getDay()];
-  el("selectedDayLabel").textContent = state.selectedDate === localDateKey(new Date()) ? "今天" : "這天";
-  el("selectedDayCount").textContent = dayEvents.length;
   el("todayEvents").innerHTML = dayEvents.length
     ? dayEvents.map((event) => eventRowTemplate(event)).join("")
     : '<div class="empty-state">這天沒有符合條件的行程。</div>';
@@ -1698,8 +1643,11 @@ function renderAgenda() {
 
 function renderRecent() {
   const items = noticeItems();
-  el("recentList").innerHTML = items.slice(0, 5).map(noticeItemTemplate).join("")
-    || '<div class="empty-state">目前沒有停課、模考或備註。</div>';
+  // 首頁只放近一個月（今天起 30 天內開始）的提醒；完整清單在「查看全部」通知面板
+  const horizon = addDaysKey(localDateKey(new Date()), 30);
+  const recent = items.filter((item) => item.sortDate <= horizon);
+  el("recentList").innerHTML = recent.slice(0, 5).map(noticeItemTemplate).join("")
+    || '<div class="empty-state">近一個月內沒有停課、模考或備註。</div>';
   el("noticeList").innerHTML = items.map(noticeItemTemplate).join("")
     || '<div class="empty-state">目前沒有通知。</div>';
 }
@@ -1710,7 +1658,6 @@ function updateNoticeBadge() {
 }
 
 function eventRowTemplate(event) {
-  const meta = eventMeta(event);
   return `
     <button class="event-row${event.type === "停課" ? " cancel-event" : ""}" type="button" data-action="open-event" data-event-id="${event.id}" style="--event-color:${event.color}">
       <span class="time-rail">${timeRail(event)}</span>
@@ -1720,7 +1667,6 @@ function eventRowTemplate(event) {
           <span class="subject-tag">${escapeHTML(tagText(event))}</span>
           <span class="event-name">${escapeHTML(cleanTitle(event))}</span>
         </span>
-        <span class="meta-line">${meta}</span>
       </span>
       <span class="event-side">${sideMeta(event)}</span>
     </button>`;
@@ -1745,7 +1691,6 @@ function compactEventTemplate(event) {
       <span class="compact-time">${compactTime(event)}</span>
       <span>
         <span class="compact-title"><span class="small-tag">${escapeHTML(tagText(event))}</span><strong>${escapeHTML(cleanTitle(event))}</strong></span>
-        <span class="compact-detail">${escapeHTML(compactDetail(event))}</span>
       </span>
       <span class="compact-side">${sideMeta(event)}</span>
     </button>`;
@@ -1916,17 +1861,6 @@ function formatEventDates(event) {
 
 function groupSubject(subject) {
   return SUBJECT_GROUPS[subject] || subject;
-}
-
-function eventMeta(event) {
-  const bits = [];
-  const scope = extractDetail(event.detail, "範圍");
-  const content = extractDetail(event.detail, "內容");
-  const paper = extractDetail(event.detail, "卷別");
-  if (scope) bits.push(`<span><i data-lucide="target" size="17"></i>${escapeHTML(scope)}</span>`);
-  if (!scope && content) bits.push(`<span><i data-lucide="file-text" size="17"></i>${escapeHTML(content)}</span>`);
-  if (paper) bits.push(`<span><i data-lucide="file-text" size="17"></i>${escapeHTML(paper)}</span>`);
-  return bits.join("");
 }
 
 function sideMeta(event) {
