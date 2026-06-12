@@ -59,10 +59,11 @@
 <script>
 const SHORT_SUBJ = { "公民與社會": "公民", "國文/社會": "國社" };
 const short = (s) => SHORT_SUBJ[s] || s;
-// 科目色僅作標示用：細科歸併為「自然」「社會」兩色（標題仍保留細科名稱）
+// 顯示層科目歸併：資料保留細科名稱，紙本標籤統一為「自然」「社會」
 const SUBJECT_GROUPS = { "理化": "自然", "生物": "自然", "歷史": "社會", "地理": "社會", "公民與社會": "社會" };
 const SUBJECT_COLORS = { "國文": "#c0392b", "英文": "#2980b9", "數學": "#8e44ad", "自然": "#229954", "社會": "#e67e22" };
 const subjColor = (s) => SUBJECT_COLORS[SUBJECT_GROUPS[s] || s] || "#888";
+const groupSubject = (s) => SUBJECT_GROUPS[s] || s;
 
 fetch("events.json?v=" + Date.now())
   .then((r) => r.json())
@@ -101,16 +102,16 @@ function addDays(iso, n) {
   return d.toISOString().slice(0, 10);
 }
 function evLine(e) {
-  const t = e.start.slice(11);
   const bc = ` style="border-left-color:${subjColor(e.subject)}"`;
   if (e.type === "複習卷") {
     const m = e.title.match(/^(.+?)複習卷 第(\d+)回$/);
     const scopeLine = (e.detail.split("\n").find((l) => l.startsWith("範圍：")) || "").slice(3);
     const scope = scopeLine ? `<span class="scope">${scopeLine.slice(0, 16)}</span>` : "";
-    return `<div class="ev round"${bc}><span class="t">${t}</span> ${short(m[1])}卷${m[2]} ${scope}</div>`;
+    return `<div class="ev round"${bc}>${short(groupSubject(m[1]))}卷${m[2]} ${scope}</div>`;
   }
-  if (e.type === "高名模考") return `<div class="ev mock"${bc}><span class="t">${t}</span> ${e.title.replace("高名模考", "模考")}</div>`;
-  return `<div class="ev"${bc}><span class="t">${t}</span> ${e.title}</div>`;
+  if (e.type === "高名模考") return `<div class="ev mock"${bc}>${e.title.replace("高名模考", "模考").replace(e.subject || "", groupSubject(e.subject || ""))}</div>`;
+  const title = e.subject ? e.title.replace(e.subject, groupSubject(e.subject)) : e.title;
+  return `<div class="ev"${bc}>${title}</div>`;
 }
 function renderMonth(y, m, data, byDate, closedDays, noteDays) {
   const sec = document.createElement("section");
@@ -144,7 +145,7 @@ function renderMonth(y, m, data, byDate, closedDays, noteDays) {
   }
   html += "</tbody></table>";
   const legend = Object.entries(SUBJECT_COLORS).map(([s, c]) => `<span class="lg"><span class="dot" style="background:${c}"></span>${s}</span>`).join("");
-  html += `<div class="m-foot"><span>${legend}　粗體＝複習卷／模考　灰底＝停課　（週日未列，無課；每週固定課表見線上行事曆「課表」）</span><span>線上行事曆：jimmy-hola.github.io/guoming-class-calendar</span></div>`;
+  html += `<div class="m-foot"><span>${legend}　粗體＝模考與複習　灰底＝停課　（週日未列，無課；每週固定課表見線上行事曆「課表」）</span><span>線上行事曆：jimmy-hola.github.io/guoming-class-calendar</span></div>`;
   sec.innerHTML = html;
   return sec;
 }

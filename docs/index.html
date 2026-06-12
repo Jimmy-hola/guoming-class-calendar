@@ -89,7 +89,7 @@
 </div>
 
 <script>
-// 顯示層科目歸併：標題保留細科名稱，僅顏色與圖例統一為「自然」「社會」
+// 顯示層科目歸併：資料保留細科名稱，畫面標籤與圖例統一為「自然」「社會」
 const SUBJECT_GROUPS = { "理化": "自然", "生物": "自然", "歷史": "社會", "地理": "社會", "公民與社會": "社會" };
 const groupSubject = (s) => SUBJECT_GROUPS[s] || s;
 const SUBJECT_COLORS = {
@@ -97,7 +97,7 @@ const SUBJECT_COLORS = {
   "自然": "#229954", "社會": "#e67e22", "國文/社會": "#795548",
 };
 const TYPE_COLORS = { "停課": "#9e9e9e", "備註": "#f9a825", "高名模考": "#d32f2f", "重要日程": "#5e35b1" };
-const TYPES = ["全部", "暑訓", "模考與複習卷", "停課與備註"];
+const TYPES = ["全部", "暑訓", "模考與複習", "停課與備註"];
 let activeType = "全部";
 let allEvents = [];
 let calendar;
@@ -108,15 +108,23 @@ function colorOf(e) {
 }
 function matchType(e) {
   if (activeType === "全部") return true;
-  if (activeType === "模考與複習卷") return e.type === "複習卷" || e.type === "高名模考";
+  if (activeType === "模考與複習") return e.type === "複習卷" || e.type === "高名模考";
   if (activeType === "停課與備註") return e.type === "停課" || e.type === "備註" || e.type === "重要日程";
   return e.type === activeType;
 }
 // 行事曆格子顯示精簡標題（去掉結尾括號的範圍說明），完整標題留在詳情彈窗
-const shortTitle = (t) => t.replace(/（[^（）]+）$/, "");
+const shortTitle = (e) => {
+  const title = e.title.replace(/（[^（）]+）$/, "");
+  return e.subject ? title.replace(e.subject, groupSubject(e.subject)) : title;
+};
+const typeLabel = (type) => {
+  if (type === "複習卷" || type === "高名模考") return "模考與複習";
+  if (type === "重要日程") return "停課與備註";
+  return type;
+};
 function toFC(e) {
   return {
-    title: shortTitle(e.title), start: e.start, end: e.end, allDay: !!e.allDay,
+    title: shortTitle(e), start: e.start, end: e.end, allDay: !!e.allDay,
     backgroundColor: colorOf(e), borderColor: colorOf(e),
     classNames: ["type-" + e.type],
     extendedProps: { type: e.type, subject: e.subject, detail: e.detail, fullTitle: e.title },
@@ -181,7 +189,7 @@ fetch("events.json?v=" + Date.now())
         const p = info.event.extendedProps;
         document.getElementById("mTitle").textContent = p.fullTitle || info.event.title;
         const tag = document.getElementById("mTag");
-        tag.textContent = p.type;
+        tag.textContent = typeLabel(p.type);
         tag.style.background = info.event.backgroundColor;
         document.getElementById("mWhen").textContent = fmtRange(info.event);
         document.getElementById("mBody").textContent = p.detail || "（無其他說明）";
@@ -239,7 +247,7 @@ function renderTimetable(data) {
     html += `<div class="tt-day${weekend ? " weekend" : ""}"><div class="tt-day-head"><span class="badge">${wd}</span>週${wd}</div>` +
       rows.map((r) => {
         const chip = r.subject
-          ? `<span class="tt-subj" style="background:${SUBJECT_COLORS[groupSubject(r.subject)] || "#607d8b"}">${r.subject}</span>`
+          ? `<span class="tt-subj" style="background:${SUBJECT_COLORS[groupSubject(r.subject)] || "#607d8b"}">${groupSubject(r.subject)}</span>`
           : "";
         return `<div class="tt-row"><span class="tt-time">${r.start_time}–${r.end_time}</span>${chip}<span>${r.activity}</span></div>`;
       }).join("") + `</div>`;

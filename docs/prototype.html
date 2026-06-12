@@ -7,19 +7,19 @@
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
 <style>
   :root {
-    --bg: #eaf2f7;
+    --bg: #f7fafc;
     --paper: #ffffff;
-    --paper-soft: #f7fbff;
-    --ink: #182337;
+    --paper-soft: #f8fbfd;
+    --ink: #111827;
     --navy: #073e63;
-    --blue: #086ed7;
+    --blue: #0b6fdb;
     --blue-dark: #045cb5;
-    --teal: #0986a7;
-    --line: #d7e3ec;
-    --muted: #65758a;
-    --muted-2: #8b98a8;
+    --teal: #0b87a5;
+    --line: #d8e2eb;
+    --muted: #657085;
+    --muted-2: #8a96a8;
     --danger: #ef3340;
-    --shadow: 0 12px 34px rgba(10, 42, 70, 0.14);
+    --shadow: 0 18px 38px rgba(6, 37, 62, 0.1);
     --radius: 8px;
     --safe-bottom: env(safe-area-inset-bottom, 0px);
   }
@@ -29,9 +29,7 @@
   body {
     margin: 0;
     color: var(--ink);
-    background:
-      radial-gradient(circle at 50% -12%, rgba(255,255,255,0.9), rgba(255,255,255,0) 34%),
-      var(--bg);
+    background: var(--bg);
     font-family: -apple-system, BlinkMacSystemFont, "PingFang TC", "Microsoft JhengHei", "Noto Sans TC", sans-serif;
     letter-spacing: 0;
   }
@@ -50,7 +48,7 @@
     min-height: 100vh;
     margin: 0 auto;
     background: var(--paper);
-    box-shadow: 0 0 0 1px rgba(7, 62, 99, 0.06), var(--shadow);
+    box-shadow: 0 0 0 1px rgba(7, 62, 99, 0.08), var(--shadow);
     position: relative;
     overflow: clip;
   }
@@ -59,22 +57,40 @@
     position: sticky;
     top: 0;
     z-index: 20;
-    height: 64px;
-    padding: 10px 16px;
+    min-height: 92px;
+    padding: 16px 14px 11px;
     display: grid;
-    grid-template-columns: 44px 1fr 44px;
+    gap: 11px;
+    background: rgba(255, 255, 255, 0.96);
+    color: var(--navy);
+    backdrop-filter: blur(16px);
+  }
+
+  .brand-row {
+    display: grid;
+    grid-template-columns: 32px minmax(0, 1fr) 40px;
     align-items: center;
-    background: var(--blue);
-    color: #fff;
-    box-shadow: 0 2px 10px rgba(7, 62, 99, 0.18);
+    gap: 8px;
+  }
+
+  .brand-mark {
+    width: 32px;
+    height: 32px;
+    display: grid;
+    place-items: center;
+    color: var(--navy);
   }
 
   .app-title {
     margin: 0;
-    text-align: center;
-    font-size: 1.42rem;
-    line-height: 1;
-    font-weight: 850;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 1.3rem;
+    line-height: 1.15;
+    font-weight: 900;
+    color: var(--navy);
   }
 
   .icon-button {
@@ -89,10 +105,16 @@
     position: relative;
   }
 
+  .brand-row .icon-button {
+    width: 40px;
+    height: 40px;
+    justify-self: end;
+  }
+
   .icon-button:hover,
   .icon-button:focus-visible {
     outline: none;
-    background: rgba(255, 255, 255, 0.14);
+    background: #eef6fc;
   }
 
   .badge {
@@ -113,14 +135,21 @@
     position: absolute;
     top: 3px;
     right: 2px;
-    border: 2px solid var(--blue);
+    border: 2px solid #fff;
   }
 
   main {
-    padding: 0 16px 88px;
+    padding: 0 14px 24px;
+  }
+
+  @media (max-width: 759px) {
+    .app-shell {
+      margin: 0;
+    }
   }
 
   .school-row {
+    display: none;
     min-height: 72px;
     padding: 18px 0 16px;
     display: grid;
@@ -149,17 +178,27 @@
   }
 
   .updated {
-    margin-top: 5px;
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 8px;
     color: var(--muted);
-    font-size: 0.86rem;
+    font-size: 0.98rem;
     white-space: nowrap;
   }
 
+  .updated svg {
+    width: 19px;
+    height: 19px;
+  }
+
   .hero-date {
-    padding: 24px 0 16px;
+    margin-top: 2px;
+    padding: 18px 16px 11px;
+    border: 1px solid #ccdbe7;
+    border-radius: var(--radius);
+    background:
+      linear-gradient(150deg, rgba(239, 248, 255, 0.95), rgba(255, 255, 255, 0.98) 58%),
+      #fff;
   }
 
   .date-line {
@@ -167,32 +206,37 @@
     align-items: center;
     gap: 10px;
     min-width: 0;
+    color: var(--navy);
+  }
+
+  .date-icon {
+    flex: 0 0 auto;
+    color: var(--teal);
   }
 
   .date-line h2 {
     margin: 0;
-    font-size: clamp(3rem, 16vw, 4.25rem);
-    line-height: 0.95;
+    font-size: 1.58rem;
+    line-height: 1.08;
     font-weight: 900;
     letter-spacing: 0;
-    color: #20242d;
+    color: var(--navy);
   }
 
   .weekday-pill {
     flex: 0 0 auto;
-    min-width: 66px;
-    height: 42px;
-    padding: 0 13px;
+    min-width: 0;
+    height: auto;
+    padding: 0;
     border: 0;
-    border-radius: 8px;
-    display: inline-grid;
-    place-items: center;
-    background: var(--blue);
-    color: #fff;
-    font-size: 1.28rem;
+    border-radius: 0;
+    display: inline;
+    background: transparent;
+    color: var(--navy);
+    font-size: 1.58rem;
     line-height: 1;
     font-weight: 850;
-    box-shadow: 0 8px 18px rgba(8, 110, 215, 0.22);
+    box-shadow: none;
   }
 
   .today-summary {
@@ -200,19 +244,21 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    font-size: 1.34rem;
+    color: var(--navy);
+    font-size: 1.12rem;
     line-height: 1.2;
     font-weight: 700;
   }
 
   .today-summary .count {
-    color: var(--blue);
-    font-size: 1.52rem;
+    color: var(--teal);
+    font-size: 1.38rem;
     font-weight: 900;
   }
 
   .event-stack {
-    border-top: 1px solid var(--line);
+    margin-top: 8px;
+    border-top: 0;
   }
 
   .event-row {
@@ -222,60 +268,51 @@
     background: transparent;
     text-align: left;
     display: grid;
-    grid-template-columns: 78px 26px 1fr 26px;
-    gap: 8px;
+    grid-template-columns: 66px 5px minmax(0, 1fr) auto;
+    gap: 11px;
     align-items: center;
-    padding: 15px 0;
+    padding: 12px 0 11px;
+  }
+
+  .event-row:last-child {
+    border-bottom: 0;
   }
 
   .event-row:hover,
   .event-row:focus-visible {
     outline: none;
-    background: #f5faff;
+    background: rgba(242, 248, 252, 0.7);
   }
 
   .time-rail {
-    color: var(--blue);
-    font-size: 1.18rem;
+    color: #111827;
+    font-size: 0.98rem;
     line-height: 1.22;
-    font-weight: 780;
-    text-align: left;
+    font-weight: 850;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
   }
 
   .time-rail .dash {
     display: block;
-    height: 17px;
-    margin-left: 28px;
-    border-left: 3px solid currentColor;
+    height: auto;
+    margin-left: 0;
+    border-left: 0;
   }
 
   .dot-line {
     height: 100%;
-    min-height: 70px;
-    display: grid;
-    justify-items: center;
-    align-items: start;
-    position: relative;
+    min-height: 47px;
+    border-radius: 999px;
+    background: var(--event-color);
   }
 
   .dot-line::after {
-    content: "";
-    width: 2px;
-    height: calc(100% - 16px);
-    min-height: 42px;
-    background: color-mix(in srgb, var(--event-color) 42%, #fff);
-    position: absolute;
-    top: 22px;
+    display: none;
   }
 
   .dot {
-    width: 13px;
-    height: 13px;
-    margin-top: 8px;
-    border-radius: 50%;
-    background: var(--event-color);
-    box-shadow: 0 0 0 4px #fff;
-    z-index: 1;
+    display: none;
   }
 
   .event-main {
@@ -285,20 +322,20 @@
   .event-title-line {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     min-width: 0;
   }
 
   .subject-tag {
-    min-width: 54px;
-    height: 31px;
+    min-width: 47px;
+    height: 29px;
     padding: 0 10px;
     border-radius: 6px;
     display: inline-grid;
     place-items: center;
     background: var(--event-color);
     color: #fff;
-    font-size: 1rem;
+    font-size: 0.92rem;
     line-height: 1;
     font-weight: 850;
     white-space: nowrap;
@@ -309,18 +346,18 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-size: 1.16rem;
+    font-size: 1.02rem;
     line-height: 1.22;
     font-weight: 850;
   }
 
   .meta-line {
-    margin-top: 8px;
+    margin-top: 6px;
     display: flex;
     flex-wrap: wrap;
     gap: 6px 12px;
     color: #5b6675;
-    font-size: 0.92rem;
+    font-size: 0.86rem;
     line-height: 1.25;
   }
 
@@ -331,23 +368,50 @@
     min-width: 0;
   }
 
+  .meta-line:empty,
+  .event-side:empty,
+  .compact-side:empty {
+    display: none;
+  }
+
   .chevron {
     color: var(--muted-2);
   }
 
+  .event-side,
+  .compact-side {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #2f3746;
+    font-size: 0.88rem;
+    white-space: nowrap;
+  }
+
+  .compact-side {
+    justify-content: end;
+    font-size: 0.88rem;
+  }
+
+  .event-row .chevron {
+    display: none;
+  }
+
   .section-title {
     margin: 0;
-    font-size: 1.18rem;
+    color: var(--navy);
+    font-size: 1.42rem;
     line-height: 1.2;
     font-weight: 850;
   }
 
-  .week-panel,
-  .quick-panel,
+  .week-panel {
+    display: none;
+  }
+
   .agenda-panel {
-    border-top: 1px solid var(--line);
-    padding-top: 17px;
-    margin-top: 18px;
+    padding-top: 0;
+    margin-top: 24px;
   }
 
   .week-strip {
@@ -421,55 +485,6 @@
     background: var(--dot-color);
   }
 
-  .quick-grid {
-    margin-top: 12px;
-    display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: 8px;
-  }
-
-  .quick-card {
-    min-width: 0;
-    min-height: 88px;
-    padding: 9px 6px 8px;
-    border: 1px solid color-mix(in srgb, var(--quick-color) 46%, #d8e5ee);
-    border-radius: 8px;
-    display: grid;
-    justify-items: center;
-    align-content: center;
-    gap: 5px;
-    background: color-mix(in srgb, var(--quick-color) 8%, #fff);
-    color: var(--quick-color);
-  }
-
-  .quick-card:hover,
-  .quick-card:focus-visible {
-    outline: none;
-    transform: translateY(-1px);
-    box-shadow: 0 8px 18px rgba(10, 42, 70, 0.1);
-  }
-
-  .quick-label {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 3px;
-    width: 100%;
-    font-weight: 850;
-    font-size: 0.94rem;
-    line-height: 1.1;
-    white-space: nowrap;
-  }
-
-  .quick-card .badge {
-    position: static;
-    min-width: 24px;
-    height: 24px;
-    font-size: 0.84rem;
-    background: var(--quick-color);
-    border: 0;
-  }
-
   .agenda-header {
     display: flex;
     align-items: center;
@@ -487,6 +502,7 @@
     gap: 5px;
     background: transparent;
     color: var(--navy);
+    font-size: 1rem;
     font-weight: 850;
   }
 
@@ -497,9 +513,9 @@
   }
 
   .chip-row {
-    margin-top: 12px;
+    margin-top: 16px;
     display: flex;
-    gap: 8px;
+    gap: 9px;
     overflow-x: auto;
     padding-bottom: 2px;
     scrollbar-width: none;
@@ -509,12 +525,13 @@
 
   .chip {
     flex: 0 0 auto;
-    height: 38px;
-    padding: 0 16px;
+    height: 39px;
+    padding: 0 15px;
     border: 1px solid var(--navy);
     border-radius: 999px;
     background: #fff;
     color: var(--navy);
+    font-size: 0.98rem;
     font-weight: 760;
     white-space: nowrap;
   }
@@ -526,13 +543,44 @@
     box-shadow: 0 9px 18px rgba(8, 110, 215, 0.18);
   }
 
+  .mini-action-row {
+    display: none;
+    margin-top: 12px;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+  }
+
+  .mini-action-row::-webkit-scrollbar { display: none; }
+
+  .mini-action {
+    flex: 0 0 auto;
+    min-height: 36px;
+    padding: 0 12px;
+    border: 1px solid color-mix(in srgb, var(--action-color) 45%, #d7e3ec);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--action-color) 8%, #fff);
+    color: var(--action-color);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.92rem;
+    font-weight: 850;
+    white-space: nowrap;
+  }
+
+  .mini-action .badge {
+    display: none;
+  }
+
   .search-row {
+    display: none;
     margin-top: 12px;
     height: 42px;
     border: 1px solid var(--line);
     border-radius: 8px;
     background: #f8fbfd;
-    display: grid;
     grid-template-columns: 38px 1fr 38px;
     align-items: center;
     color: var(--muted);
@@ -561,7 +609,7 @@
   }
 
   .agenda-list {
-    margin-top: 14px;
+    margin-top: 22px;
     border: 1px solid var(--line);
     border-radius: 8px;
     overflow: hidden;
@@ -574,32 +622,36 @@
 
   .date-group-head {
     min-height: 40px;
-    padding: 8px 13px;
+    padding: 8px 13px 8px 14px;
     display: flex;
     justify-content: space-between;
     gap: 10px;
     align-items: center;
     background: linear-gradient(180deg, #fbfdff, #f3f7fa);
     color: var(--navy);
+    font-size: 1.08rem;
     font-weight: 850;
   }
 
   .date-group-count {
     color: var(--muted);
-    font-size: 0.92rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 0.9rem;
     font-weight: 700;
   }
 
   .compact-event {
     width: 100%;
-    min-height: 64px;
-    padding: 11px 12px;
+    min-height: 62px;
+    padding: 10px 10px 10px 12px;
     border: 0;
     border-top: 1px solid #edf2f6;
     background: #fff;
     display: grid;
-    grid-template-columns: 4px 92px 1fr 24px;
-    gap: 11px;
+    grid-template-columns: 5px 84px minmax(0, 1fr) auto;
+    gap: 9px;
     align-items: center;
     text-align: left;
   }
@@ -615,15 +667,15 @@
   }
 
   .color-bar {
-    width: 4px;
+    width: 5px;
     height: 42px;
     border-radius: 999px;
     background: var(--event-color);
   }
 
   .compact-time {
-    color: #202a3b;
-    font-size: 0.98rem;
+    color: #1f2937;
+    font-size: 0.92rem;
     line-height: 1.2;
     font-variant-numeric: tabular-nums;
   }
@@ -641,18 +693,20 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     font-size: 1rem;
+    line-height: 1.18;
+    font-weight: 850;
   }
 
   .small-tag {
-    min-width: 48px;
-    height: 28px;
+    min-width: 45px;
+    height: 27px;
     padding: 0 8px;
     border-radius: 5px;
     display: inline-grid;
     place-items: center;
     background: var(--event-color);
     color: #fff;
-    font-size: 0.9rem;
+    font-size: 0.86rem;
     font-weight: 850;
     white-space: nowrap;
   }
@@ -660,7 +714,7 @@
   .compact-detail {
     margin-top: 4px;
     color: var(--muted);
-    font-size: 0.88rem;
+    font-size: 0.82rem;
     line-height: 1.25;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -675,6 +729,7 @@
   }
 
   .recent-panel {
+    display: none;
     margin-top: 18px;
     padding: 16px 0 6px;
     border-top: 1px solid var(--line);
@@ -722,42 +777,6 @@
     color: var(--muted);
     font-size: 0.9rem;
     text-align: right;
-  }
-
-  .bottom-nav {
-    position: sticky;
-    bottom: 0;
-    z-index: 18;
-    height: calc(68px + var(--safe-bottom));
-    padding: 5px 12px calc(5px + var(--safe-bottom));
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 4px;
-    background: rgba(255, 255, 255, 0.96);
-    border-top: 1px solid var(--line);
-    backdrop-filter: blur(16px);
-  }
-
-  .nav-item {
-    border: 0;
-    border-radius: 8px;
-    background: transparent;
-    color: #2c313b;
-    display: grid;
-    justify-items: center;
-    align-content: center;
-    gap: 3px;
-    font-weight: 850;
-    font-size: 0.93rem;
-  }
-
-  .nav-item.active {
-    color: var(--blue);
-  }
-
-  .nav-item.active::before {
-    content: "";
-    position: absolute;
   }
 
   .drawer,
@@ -818,6 +837,10 @@
     gap: 10px;
     text-align: left;
     font-weight: 760;
+  }
+
+  .drawer-link .badge {
+    margin-left: auto;
   }
 
   .drawer-link:hover,
@@ -948,7 +971,7 @@
     position: fixed;
     z-index: 80;
     left: 50%;
-    bottom: calc(80px + var(--safe-bottom));
+    bottom: calc(18px + var(--safe-bottom));
     transform: translateX(-50%) translateY(20px);
     max-width: min(88vw, 360px);
     padding: 10px 14px;
@@ -972,16 +995,19 @@
 
   @media (max-width: 390px) {
     main { padding-inline: 12px; }
-    .app-bar { padding-inline: 10px; }
-    .app-title { font-size: 1.22rem; }
-    .event-row { grid-template-columns: 66px 22px 1fr 22px; gap: 6px; }
-    .time-rail { font-size: 1.02rem; }
+    .app-bar { padding: 22px 15px 16px; }
+    .app-title { font-size: 1.24rem; }
+    .brand-row { grid-template-columns: 32px minmax(0, 1fr) 42px; gap: 7px; }
+    .hero-date { padding-inline: 18px; }
+    .date-line h2,
+    .weekday-pill { font-size: 1.52rem; }
+    .event-row { grid-template-columns: 62px 5px minmax(0, 1fr); gap: 10px; }
+    .event-side { display: none; }
+    .time-rail { font-size: 0.98rem; }
     .event-name { font-size: 1.02rem; }
     .subject-tag { min-width: 48px; height: 29px; font-size: 0.92rem; }
-    .quick-grid { gap: 6px; }
-    .quick-card { min-height: 80px; padding-inline: 4px; }
-    .quick-label { font-size: 0.82rem; }
-    .compact-event { grid-template-columns: 4px 76px 1fr 20px; gap: 8px; }
+    .compact-event { grid-template-columns: 5px 78px minmax(0, 1fr); gap: 9px; }
+    .compact-side { display: none; }
     .compact-time { font-size: 0.9rem; }
   }
 
@@ -994,9 +1020,6 @@
     .app-bar {
       border-radius: 8px 8px 0 0;
     }
-    .bottom-nav {
-      border-radius: 0 0 8px 8px;
-    }
     .drawer,
     .sheet,
     .modal {
@@ -1008,27 +1031,20 @@
 <body>
 <div class="app-shell" id="app">
   <header class="app-bar">
-    <button class="icon-button" type="button" data-action="open-menu" aria-label="開啟選單">
-      <i data-lucide="menu"></i>
-    </button>
-    <h1 class="app-title">國三班行事曆</h1>
-    <button class="icon-button" type="button" data-action="open-notices" aria-label="查看通知">
-      <i data-lucide="bell"></i>
-      <span class="badge" id="noticeBadge">0</span>
-    </button>
+    <div class="brand-row">
+      <div class="brand-mark"><i data-lucide="calendar-days" size="32"></i></div>
+      <h1 class="app-title" id="siteTitle">高名文理補習班 國三班行事曆</h1>
+      <button class="icon-button" type="button" data-action="open-menu" aria-label="開啟選單">
+        <i data-lucide="menu" size="34"></i>
+      </button>
+    </div>
+    <div class="updated"><i data-lucide="clock-3" size="21"></i><span id="updatedText">載入中</span></div>
   </header>
 
   <main>
-    <section class="school-row" aria-label="班級資訊">
-      <div class="school-mark"><i data-lucide="school"></i></div>
-      <div>
-        <h2 class="school-title" id="siteTitle">高名文理補習班</h2>
-        <div class="updated"><i data-lucide="clock-3" size="17"></i><span id="updatedText">載入中</span></div>
-      </div>
-    </section>
-
     <section class="hero-date" id="todayPanel" aria-label="今日行程">
       <div class="date-line">
+        <i class="date-icon" data-lucide="calendar-days" size="31"></i>
         <h2 id="selectedDateTitle">--</h2>
         <button class="weekday-pill" type="button" data-action="jump-today" id="weekdayPill">--</button>
       </div>
@@ -1041,53 +1057,36 @@
       <div class="event-stack" id="todayEvents"></div>
     </section>
 
-    <section class="week-panel" id="weekPanel" aria-label="本週概覽">
-      <h2 class="section-title">本週概覽</h2>
+    <section class="week-panel" id="weekPanel" aria-label="本週速覽">
+      <h2 class="section-title">本週速覽</h2>
       <div class="week-strip" id="weekStrip"></div>
     </section>
 
-    <section class="quick-panel" aria-label="快速查看">
-      <h2 class="section-title">快速查看</h2>
-      <div class="quick-grid" id="quickGrid"></div>
-    </section>
-
-    <section class="recent-panel" id="recentPanel" aria-label="近期記事">
-      <div class="agenda-header">
-        <h2 class="section-title">近期記事</h2>
-        <button class="filter-button" type="button" data-action="show-notes">查看全部 <i data-lucide="chevron-right" size="19"></i></button>
-      </div>
-      <div class="recent-list" id="recentList"></div>
-    </section>
-
-    <section class="agenda-panel" id="agendaPanel" aria-label="本週行程">
+    <section class="agenda-panel" id="agendaPanel" aria-label="接下來">
       <div class="agenda-header">
         <h2 class="section-title">本週行程</h2>
         <button class="filter-button" type="button" data-action="open-filters"><i data-lucide="sliders-horizontal"></i>篩選</button>
       </div>
+      <div class="mini-action-row" id="quickActions" aria-label="快速切換"></div>
+      <div class="search-row-wrap" id="searchWrap">
+        <label class="search-row" for="searchInput">
+          <span style="display:grid;place-items:center"><i data-lucide="search" size="19"></i></span>
+          <input id="searchInput" type="search" placeholder="搜尋科目、範圍或行程">
+          <button class="clear-search" id="clearSearch" type="button" data-action="clear-search" aria-label="清除搜尋"><i data-lucide="x" size="18"></i></button>
+        </label>
+      </div>
       <div class="chip-row" id="typeChips"></div>
-      <label class="search-row" for="searchInput">
-        <span style="display:grid;place-items:center"><i data-lucide="search" size="19"></i></span>
-        <input id="searchInput" type="search" placeholder="搜尋科目、範圍或行程">
-        <button class="clear-search" id="clearSearch" type="button" data-action="clear-search" aria-label="清除搜尋"><i data-lucide="x" size="18"></i></button>
-      </label>
       <div class="agenda-list" id="agendaList"></div>
     </section>
-  </main>
 
-  <nav class="bottom-nav" aria-label="主要導覽">
-    <button class="nav-item active" type="button" data-action="nav-today">
-      <i data-lucide="home"></i>
-      <span>今日</span>
-    </button>
-    <button class="nav-item" type="button" data-action="nav-calendar">
-      <i data-lucide="calendar-days"></i>
-      <span>行事曆</span>
-    </button>
-    <button class="nav-item" type="button" data-action="open-filters">
-      <i data-lucide="funnel"></i>
-      <span>篩選</span>
-    </button>
-  </nav>
+    <section class="recent-panel" id="recentPanel" aria-label="重要提醒">
+      <div class="agenda-header">
+        <h2 class="section-title">重要提醒</h2>
+        <button class="filter-button" type="button" data-action="show-notes">查看全部 <i data-lucide="chevron-right" size="19"></i></button>
+      </div>
+      <div class="recent-list" id="recentList"></div>
+    </section>
+  </main>
 
   <div class="drawer" id="menuDrawer" aria-hidden="true">
     <button class="scrim" type="button" data-action="close-panels" aria-label="關閉"></button>
@@ -1098,8 +1097,10 @@
       </div>
       <button class="drawer-link" type="button" data-action="nav-today"><i data-lucide="home"></i>今日行程</button>
       <button class="drawer-link" type="button" data-action="nav-calendar"><i data-lucide="calendar-range"></i>本週行程</button>
-      <button class="drawer-link" type="button" data-action="quick-mock"><i data-lucide="file-check-2"></i>模考安排</button>
+      <button class="drawer-link" type="button" data-action="quick-mock"><i data-lucide="file-check-2"></i>模考與複習</button>
       <button class="drawer-link" type="button" data-action="show-notes"><i data-lucide="megaphone"></i>停課與記事</button>
+      <button class="drawer-link" type="button" data-action="open-notices"><i data-lucide="bell"></i>重要通知 <span class="badge" id="noticeBadge">0</span></button>
+      <a class="drawer-link" href="print.html" style="text-decoration:none;color:inherit"><i data-lucide="printer"></i>紙本進度表</a>
       <a class="drawer-link" href="index.html" style="text-decoration:none;color:inherit"><i data-lucide="external-link"></i>查看目前正式版</a>
       <p class="drawer-note" id="drawerNote">這是互動 prototype，資料來源與正式行事曆相同。</p>
     </aside>
@@ -1159,13 +1160,8 @@ const SUBJECT_COLORS = {
   "國文": "#ef3340",
   "英文": "#086ed7",
   "數學": "#1768d8",
-  "理化": "#ff7a00",
-  "生物": "#26a84a",
   "自然": "#21a667",
-  "歷史": "#d66a00",
-  "地理": "#008b9a",
-  "公民與社會": "#b62469",
-  "社會": "#7c43c6",
+  "社會": "#d66a00",
   "國文/社會": "#815034",
 };
 
@@ -1173,22 +1169,27 @@ const TYPE_COLORS = {
   "正課": "#086ed7",
   "測驗": "#0986a7",
   "暑訓": "#f28c00",
-  "複習卷": "#18a957",
-  "高名模考": "#ef3340",
-  "重要日程": "#7c43c6",
+  "模考與複習": "#ef3340",
+  "重要提醒": "#7c43c6",
   "停課": "#ef3340",
   "備註": "#0b75d1",
 };
 
+const SUBJECT_GROUPS = {
+  "理化": "自然",
+  "生物": "自然",
+  "歷史": "社會",
+  "地理": "社會",
+  "公民與社會": "社會",
+};
 const MOCK_TYPES = ["高名模考", "模考"];
+const REVIEW_TYPES = ["複習卷"];
 const NOTICE_TYPES = ["停課", "備註", "重要日程"];
-const TYPE_OPTIONS = ["全部", "正課", "測驗", "暑訓", "複習卷", "高名模考", "重要日程", "停課與備註"];
+const TYPE_OPTIONS = ["全部", "正課", "測驗", "暑訓", "模考與複習", "停課與備註"];
 const QUICK_ITEMS = [
-  { key: "today", label: "今天", icon: "calendar-days", color: "#086ed7" },
-  { key: "week", label: "本週", icon: "calendar-check", color: "#249c22" },
-  { key: "mock", label: "模考", icon: "file-check-2", color: "#ef3340" },
+  { key: "mock", label: "模考與複習", icon: "file-check-2", color: "#ef3340" },
   { key: "notice", label: "停課", icon: "megaphone", color: "#f37014" },
-  { key: "note", label: "記事", icon: "notebook-pen", color: "#6c737d" },
+  { key: "note", label: "備註", icon: "notebook-pen", color: "#6c737d" },
 ];
 
 const WEEKDAY_LABELS = ["日", "一", "二", "三", "四", "五", "六"];
@@ -1226,7 +1227,7 @@ fetch("events.json?v=" + Date.now())
   });
 
 function hydrateStatic(data) {
-  el("siteTitle").textContent = data.site_title.replace(" 國三班行事曆", "");
+  el("siteTitle").textContent = data.site_title;
   el("updatedText").textContent = data.generated_at + " 更新";
   el("drawerNote").textContent = "資料區間：" + formatShortDate(data.range.start) + " - " + formatShortDate(data.range.end) + "。這是互動 prototype，正式版仍在 index.html。";
 }
@@ -1260,13 +1261,12 @@ function chooseDefaultDate(data) {
 function render() {
   renderHero();
   renderWeekStrip();
-  renderQuickGrid();
+  renderQuickActions();
   renderTypeChips();
   renderAgenda();
   renderRecent();
   renderSheets();
   updateNoticeBadge();
-  updateNav();
   syncIcons();
 }
 
@@ -1301,12 +1301,12 @@ function renderWeekStrip() {
   }).join("");
 }
 
-function renderQuickGrid() {
+function renderQuickActions() {
   const counts = quickCounts();
-  el("quickGrid").innerHTML = QUICK_ITEMS.map((item) => `
-    <button class="quick-card" type="button" data-action="quick-${item.key}" style="--quick-color:${item.color}" aria-label="${item.label} ${counts[item.key]} 筆">
-      <i data-lucide="${item.icon}" size="30"></i>
-      <span class="quick-label">${item.label} <span class="badge">${counts[item.key]}</span></span>
+  el("quickActions").innerHTML = QUICK_ITEMS.map((item) => `
+    <button class="mini-action" type="button" data-action="quick-${item.key}" style="--action-color:${item.color}" aria-label="${item.label} ${counts[item.key]} 筆">
+      <i data-lucide="${item.icon}" size="17"></i>
+      <span>${item.label}</span>
     </button>
   `).join("");
 }
@@ -1336,24 +1336,18 @@ function renderRecent() {
 }
 
 function renderSheets() {
-  const subjects = distinct(state.events.map((event) => event.subject).filter(Boolean));
+  const subjects = distinct(state.events.map((event) => groupSubject(event.subject)).filter(Boolean));
   el("sheetTypeSelectors").innerHTML = TYPE_OPTIONS.map((type) => `
     <button class="selector ${state.activeType === type ? "on" : ""}" type="button" data-action="set-type" data-type="${escapeAttr(type)}">${escapeHTML(type)}</button>
   `).join("");
   el("sheetSubjectSelectors").innerHTML = subjects.map((subject) => `
-    <button class="selector ${state.activeSubjects.has(subject) ? "on" : ""}" type="button" data-action="toggle-subject" data-subject="${escapeAttr(subject)}">${escapeHTML(shortSubject(subject))}</button>
+    <button class="selector ${state.activeSubjects.has(subject) ? "on" : ""}" type="button" data-action="toggle-subject" data-subject="${escapeAttr(subject)}">${escapeHTML(subject)}</button>
   `).join("");
 }
 
 function updateNoticeBadge() {
   const count = importantEvents().length;
   el("noticeBadge").textContent = count > 9 ? "9+" : String(count);
-}
-
-function updateNav() {
-  document.querySelectorAll(".nav-item").forEach((button) => {
-    button.classList.toggle("active", button.dataset.action === "nav-" + state.nav);
-  });
 }
 
 function eventRowTemplate(event) {
@@ -1369,7 +1363,7 @@ function eventRowTemplate(event) {
         </span>
         <span class="meta-line">${meta}</span>
       </span>
-      <span class="chevron"><i data-lucide="chevron-right"></i></span>
+      <span class="event-side">${sideMeta(event)}</span>
     </button>`;
 }
 
@@ -1379,7 +1373,7 @@ function dateGroupTemplate(group) {
     <section class="date-group">
       <div class="date-group-head">
         <span>${d.getMonth() + 1}月${d.getDate()}日 週${WEEKDAY_LABELS[d.getDay()]}</span>
-        <span class="date-group-count">${group.events.length} 個行程</span>
+        <span class="date-group-count">${group.events.length} 個行程 <i data-lucide="chevron-down" size="19"></i></span>
       </div>
       ${group.events.map((event) => compactEventTemplate(event)).join("")}
     </section>`;
@@ -1394,7 +1388,7 @@ function compactEventTemplate(event) {
         <span class="compact-title"><span class="small-tag">${escapeHTML(tagText(event))}</span><strong>${escapeHTML(cleanTitle(event))}</strong></span>
         <span class="compact-detail">${escapeHTML(compactDetail(event))}</span>
       </span>
-      <span class="chevron"><i data-lucide="chevron-right" size="19"></i></span>
+      <span class="compact-side">${sideMeta(event)}</span>
     </button>`;
 }
 
@@ -1402,7 +1396,7 @@ function recentItemTemplate(event) {
   return `
     <button class="recent-item" type="button" data-action="open-event" data-event-id="${event.id}" style="--event-color:${event.color}">
       <span class="recent-kind"><i data-lucide="${noticeIcon(event)}"></i></span>
-      <span class="recent-text">【${escapeHTML(event.type)}】${escapeHTML(cleanTitle(event))}</span>
+      <span class="recent-text">【${escapeHTML(typeLabel(event))}】${escapeHTML(cleanTitle(event))}</span>
       <span class="recent-date">${formatMonthDay(event.startDate)}</span>
       <span class="chevron"><i data-lucide="chevron-right" size="18"></i></span>
     </button>`;
@@ -1427,7 +1421,7 @@ function quickCounts() {
   return {
     today: eventsForDate(state.selectedDate, false).length,
     week: state.events.filter((event) => week.some((date) => occursOn(event, date))).length,
-    mock: state.events.filter(isMockEvent).length,
+    mock: state.events.filter(isExamEvent).length,
     notice: state.events.filter((event) => event.type === "停課").length,
     note: state.events.filter((event) => event.type === "備註").length,
   };
@@ -1435,21 +1429,29 @@ function quickCounts() {
 
 function matchesFilters(event) {
   const typeMatch = matchesType(event, state.activeType);
-  const subjectMatch = state.activeSubjects.size === 0 || state.activeSubjects.has(event.subject);
+  const subjectMatch = state.activeSubjects.size === 0 || state.activeSubjects.has(groupSubject(event.subject));
   const query = state.search.trim().toLowerCase();
-  const queryMatch = !query || [event.title, event.type, event.subject, event.detail].join(" ").toLowerCase().includes(query);
+  const queryMatch = !query || [event.title, event.type, event.subject, groupSubject(event.subject), event.detail].join(" ").toLowerCase().includes(query);
   return typeMatch && subjectMatch && queryMatch;
 }
 
 function matchesType(event, type) {
   if (type === "全部") return true;
-  if (type === "停課與備註") return ["停課", "備註"].includes(event.type);
-  if (MOCK_TYPES.includes(type)) return isMockEvent(event);
+  if (type === "停課與備註") return ["停課", "備註", "重要日程"].includes(event.type);
+  if (type === "模考與複習") return isExamEvent(event);
   return event.type === type;
 }
 
 function isMockEvent(event) {
   return MOCK_TYPES.includes(event.type);
+}
+
+function isReviewEvent(event) {
+  return REVIEW_TYPES.includes(event.type);
+}
+
+function isExamEvent(event) {
+  return isMockEvent(event) || isReviewEvent(event);
 }
 
 function isNoticeEvent(event) {
@@ -1484,8 +1486,11 @@ function weekDays(date) {
 }
 
 function colorOf(event) {
-  if (isNoticeEvent(event)) return TYPE_COLORS[event.type] || TYPE_COLORS["高名模考"];
-  return SUBJECT_COLORS[event.subject] || TYPE_COLORS[event.type] || "#607d8b";
+  if (isMockEvent(event)) return TYPE_COLORS["模考與複習"];
+  if (event.type === "停課") return TYPE_COLORS["停課"];
+  if (event.type === "備註") return TYPE_COLORS["備註"];
+  if (event.type === "重要日程") return TYPE_COLORS["重要提醒"];
+  return SUBJECT_COLORS[groupSubject(event.subject)] || TYPE_COLORS[event.type] || "#607d8b";
 }
 
 function cleanTitle(event) {
@@ -1495,35 +1500,53 @@ function cleanTitle(event) {
       .replace("高名模考", "")
       .replace("模考", "")
       .trim();
-    return `${event.subject || "模考"}${title ? " " + title : ""}`;
+    return `${groupSubject(event.subject) || "模考"}${title ? " " + title : ""}`;
   }
   if (event.type === "暑訓") return `${event.subject}暑期訓練`;
   if (!event.subject) return event.title;
   return event.title.replace(event.subject, "").trim() || event.title;
 }
 
+function typeLabel(event) {
+  if (isExamEvent(event)) return "模考與複習";
+  if (event.type === "重要日程") return "停課與備註";
+  return event.type;
+}
+
 function tagText(event) {
   if (isMockEvent(event)) return "模考";
+  if (isReviewEvent(event)) return groupSubject(event.subject || "複習");
   if (event.type === "停課") return "停課";
   if (event.type === "備註") return "記事";
   if (event.type === "重要日程") return "重要";
   if (event.type === "暑訓") return "暑訓";
-  return shortSubject(event.subject || event.type);
+  return groupSubject(event.subject || event.type);
 }
 
-function shortSubject(subject) {
-  return subject === "公民與社會" ? "公民" : subject;
+function groupSubject(subject) {
+  return SUBJECT_GROUPS[subject] || subject;
 }
 
 function eventMeta(event) {
   const bits = [];
-  bits.push(`<span><i data-lucide="clock-3" size="17"></i>${escapeHTML(compactTime(event))}</span>`);
-  const book = extractDetail(event.detail, "冊別");
   const scope = extractDetail(event.detail, "範圍");
-  if (book) bits.push(`<span><i data-lucide="book-open" size="17"></i>${escapeHTML(book)}</span>`);
+  const content = extractDetail(event.detail, "內容");
+  const paper = extractDetail(event.detail, "卷別");
   if (scope) bits.push(`<span><i data-lucide="target" size="17"></i>${escapeHTML(scope)}</span>`);
-  if (!book && !scope && event.type === "暑訓") bits.push('<span><i data-lucide="map-pin" size="17"></i>自強教室</span>');
+  if (!scope && content) bits.push(`<span><i data-lucide="file-text" size="17"></i>${escapeHTML(content)}</span>`);
+  if (paper) bits.push(`<span><i data-lucide="file-text" size="17"></i>${escapeHTML(paper)}</span>`);
+  if (!scope && !content && !paper && event.type === "暑訓") bits.push('<span><i data-lucide="map-pin" size="17"></i>自強教室</span>');
   return bits.join("");
+}
+
+function sideMeta(event) {
+  const book = extractDetail(event.detail, "冊別");
+  if (book) return `<i data-lucide="book-open" size="19"></i><span>${escapeHTML(book)}</span>`;
+  if (event.type === "停課") return '<i data-lucide="bell" size="19"></i><span>停課</span>';
+  if (event.type === "備註" || event.type === "重要日程") return '<i data-lucide="bell" size="19"></i><span>請留意</span>';
+  if (isMockEvent(event)) return '<i data-lucide="bell" size="19"></i><span>準時</span>';
+  if (event.type === "暑訓") return '<i data-lucide="map-pin" size="19"></i><span>自強教室</span>';
+  return "";
 }
 
 function compactDetail(event) {
@@ -1547,7 +1570,7 @@ function extractDetail(detail, label) {
 
 function timeRail(event) {
   if (event.allDay) return "全天";
-  return `${pad(event.start.getHours())}:${pad(event.start.getMinutes())}<span class="dash"></span>${event.end ? `${pad(event.end.getHours())}:${pad(event.end.getMinutes())}` : ""}`;
+  return `${pad(event.start.getHours())}:${pad(event.start.getMinutes())}<span class="dash">-</span>${event.end ? `${pad(event.end.getHours())}:${pad(event.end.getMinutes())}` : ""}`;
 }
 
 function compactTime(event) {
@@ -1706,6 +1729,14 @@ document.addEventListener("click", async (event) => {
     scrollToId("agendaPanel");
   }
 
+  if (action === "nav-search") {
+    closePanels();
+    state.nav = "search";
+    render();
+    scrollToId("agendaPanel");
+    setTimeout(() => el("searchInput").focus(), 240);
+  }
+
   if (action === "set-type") {
     setActiveType(trigger.dataset.type);
   }
@@ -1741,8 +1772,8 @@ document.addEventListener("click", async (event) => {
 
   if (action === "quick-mock") {
     closePanels();
-    jumpToFirstMatching(isMockEvent);
-    state.activeType = "高名模考";
+    jumpToFirstMatching(isExamEvent);
+    state.activeType = "模考與複習";
     state.nav = "calendar";
     render();
     scrollToId("agendaPanel");
