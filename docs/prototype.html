@@ -1174,12 +1174,15 @@ const TYPE_COLORS = {
   "測驗": "#0986a7",
   "暑訓": "#f28c00",
   "複習卷": "#18a957",
-  "模考": "#ef3340",
+  "高名模考": "#ef3340",
+  "重要日程": "#7c43c6",
   "停課": "#ef3340",
   "備註": "#0b75d1",
 };
 
-const TYPE_OPTIONS = ["全部", "正課", "測驗", "暑訓", "複習卷", "模考", "停課與備註"];
+const MOCK_TYPES = ["高名模考", "模考"];
+const NOTICE_TYPES = ["停課", "備註", "重要日程"];
+const TYPE_OPTIONS = ["全部", "正課", "測驗", "暑訓", "複習卷", "高名模考", "重要日程", "停課與備註"];
 const QUICK_ITEMS = [
   { key: "today", label: "今天", icon: "calendar-days", color: "#086ed7" },
   { key: "week", label: "本週", icon: "calendar-check", color: "#249c22" },
@@ -1414,9 +1417,9 @@ function eventsForDate(date, applyFilters) {
 
 function importantEvents() {
   return state.events
-    .filter((event) => ["停課", "備註", "模考"].includes(event.type))
+    .filter(isNoticeEvent)
     .filter((event) => event.startDate >= state.defaultDate)
-    .sort(compareEvents);
+    .sort(compareTimelineEvents);
 }
 
 function quickCounts() {
@@ -1424,20 +1427,33 @@ function quickCounts() {
   return {
     today: eventsForDate(state.selectedDate, false).length,
     week: state.events.filter((event) => week.some((date) => occursOn(event, date))).length,
-    mock: state.events.filter((event) => event.type === "模考").length,
+    mock: state.events.filter(isMockEvent).length,
     notice: state.events.filter((event) => event.type === "停課").length,
     note: state.events.filter((event) => event.type === "備註").length,
   };
 }
 
 function matchesFilters(event) {
-  const typeMatch = state.activeType === "全部"
-    || event.type === state.activeType
-    || (state.activeType === "停課與備註" && ["停課", "備註"].includes(event.type));
+  const typeMatch = matchesType(event, state.activeType);
   const subjectMatch = state.activeSubjects.size === 0 || state.activeSubjects.has(event.subject);
   const query = state.search.trim().toLowerCase();
   const queryMatch = !query || [event.title, event.type, event.subject, event.detail].join(" ").toLowerCase().includes(query);
   return typeMatch && subjectMatch && queryMatch;
+}
+
+function matchesType(event, type) {
+  if (type === "全部") return true;
+  if (type === "停課與備註") return ["停課", "備註"].includes(event.type);
+  if (MOCK_TYPES.includes(type)) return isMockEvent(event);
+  return event.type === type;
+}
+
+function isMockEvent(event) {
+  return MOCK_TYPES.includes(event.type);
+}
+
+function isNoticeEvent(event) {
+  return isMockEvent(event) || NOTICE_TYPES.includes(event.type);
 }
 
 function occursOn(event, date) {
@@ -1448,6 +1464,10 @@ function occursOn(event, date) {
 
 function compareEvents(a, b) {
   if (a.allDay !== b.allDay) return a.allDay ? -1 : 1;
+  return a.sortKey - b.sortKey || a.title.localeCompare(b.title, "zh-Hant");
+}
+
+function compareTimelineEvents(a, b) {
   return a.sortKey - b.sortKey || a.title.localeCompare(b.title, "zh-Hant");
 }
 
@@ -1464,14 +1484,18 @@ function weekDays(date) {
 }
 
 function colorOf(event) {
-  if (event.type === "停課" || event.type === "備註" || event.type === "模考") return TYPE_COLORS[event.type];
+  if (isNoticeEvent(event)) return TYPE_COLORS[event.type] || TYPE_COLORS["高名模考"];
   return SUBJECT_COLORS[event.subject] || TYPE_COLORS[event.type] || "#607d8b";
 }
 
 function cleanTitle(event) {
-  if (event.type === "模考") {
-    const scope = extractDetail(event.detail, "範圍");
-    return `${event.subject}${scope ? " " + scope : ""}`;
+  if (isMockEvent(event)) {
+    const title = event.title
+      .replace(event.subject || "", "")
+      .replace("高名模考", "")
+      .replace("模考", "")
+      .trim();
+    return `${event.subject || "模考"}${title ? " " + title : ""}`;
   }
   if (event.type === "暑訓") return `${event.subject}暑期訓練`;
   if (!event.subject) return event.title;
@@ -1479,9 +1503,10 @@ function cleanTitle(event) {
 }
 
 function tagText(event) {
-  if (event.type === "模考") return "模考";
+  if (isMockEvent(event)) return "模考";
   if (event.type === "停課") return "停課";
   if (event.type === "備註") return "記事";
+  if (event.type === "重要日程") return "重要";
   if (event.type === "暑訓") return "暑訓";
   return shortSubject(event.subject || event.type);
 }
@@ -1504,6 +1529,8 @@ function eventMeta(event) {
 function compactDetail(event) {
   const book = extractDetail(event.detail, "冊別");
   const scope = extractDetail(event.detail, "範圍");
+  const paper = extractDetail(event.detail, "卷別");
+  if (isMockEvent(event)) return paper ? `卷別 ${paper}` : scope || event.type;
   if (book && scope) return `${book}・${scope}`;
   if (book || scope) return book || scope;
   if (event.detail) return event.detail.replace(/\n/g, "・");
@@ -1575,8 +1602,9 @@ function escapeAttr(value) {
 }
 
 function noticeIcon(event) {
-  if (event.type === "模考") return "file-check-2";
+  if (isMockEvent(event)) return "file-check-2";
   if (event.type === "停課") return "megaphone";
+  if (event.type === "重要日程") return "calendar-check";
   return "notebook-pen";
 }
 
@@ -1713,8 +1741,8 @@ document.addEventListener("click", async (event) => {
 
   if (action === "quick-mock") {
     closePanels();
-    jumpToFirstMatching((event) => event.type === "模考");
-    state.activeType = "模考";
+    jumpToFirstMatching(isMockEvent);
+    state.activeType = "高名模考";
     state.nav = "calendar";
     render();
     scrollToId("agendaPanel");
