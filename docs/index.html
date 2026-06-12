@@ -239,6 +239,26 @@
     box-shadow: none;
   }
 
+  .day-nav {
+    margin-left: auto;
+    display: flex;
+    gap: 2px;
+  }
+
+  .day-nav .icon-button {
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: #fff;
+    color: var(--navy);
+  }
+
+  .day-nav .icon-button:hover,
+  .day-nav .icon-button:focus-visible {
+    background: #eef6fc;
+  }
+
   .today-summary {
     margin-top: 14px;
     display: flex;
@@ -543,71 +563,6 @@
     box-shadow: 0 9px 18px rgba(8, 110, 215, 0.18);
   }
 
-  .mini-action-row {
-    display: none;
-    margin-top: 12px;
-    gap: 8px;
-    overflow-x: auto;
-    padding-bottom: 2px;
-    scrollbar-width: none;
-  }
-
-  .mini-action-row::-webkit-scrollbar { display: none; }
-
-  .mini-action {
-    flex: 0 0 auto;
-    min-height: 36px;
-    padding: 0 12px;
-    border: 1px solid color-mix(in srgb, var(--action-color) 45%, #d7e3ec);
-    border-radius: 999px;
-    background: color-mix(in srgb, var(--action-color) 8%, #fff);
-    color: var(--action-color);
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 0.92rem;
-    font-weight: 850;
-    white-space: nowrap;
-  }
-
-  .mini-action .badge {
-    display: none;
-  }
-
-  .search-row {
-    display: none;
-    margin-top: 12px;
-    height: 42px;
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    background: #f8fbfd;
-    grid-template-columns: 38px 1fr 38px;
-    align-items: center;
-    color: var(--muted);
-  }
-
-  .search-row input {
-    width: 100%;
-    min-width: 0;
-    border: 0;
-    outline: 0;
-    background: transparent;
-    color: var(--ink);
-    font-size: 0.96rem;
-  }
-
-  .clear-search {
-    border: 0;
-    background: transparent;
-    color: var(--muted);
-    display: none;
-  }
-
-  .clear-search.show {
-    display: grid;
-    place-items: center;
-  }
-
   .agenda-list {
     margin-top: 22px;
     border: 1px solid var(--line);
@@ -895,50 +850,10 @@
     box-shadow: 0 -16px 38px rgba(7, 42, 68, 0.18);
   }
 
-  .selector-grid {
-    margin-top: 12px;
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 8px;
-  }
-
-  .selector {
-    min-height: 40px;
-    padding: 8px 9px;
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    background: #fff;
-    font-weight: 740;
-  }
-
-  .selector.on {
-    border-color: var(--blue);
-    background: #eef7ff;
-    color: var(--blue);
-    box-shadow: inset 0 0 0 1px rgba(8, 110, 215, 0.16);
-  }
-
-  .sheet-actions {
-    margin-top: 16px;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-  }
-
-  .primary-button,
   .secondary-button {
     min-height: 44px;
     border-radius: 8px;
     font-weight: 850;
-  }
-
-  .primary-button {
-    border: 0;
-    background: var(--blue);
-    color: #fff;
-  }
-
-  .secondary-button {
     border: 1px solid var(--line);
     background: #fff;
     color: var(--navy);
@@ -1190,6 +1105,15 @@
     font-weight: 850;
   }
 
+  .m-cell.selected {
+    box-shadow: inset 0 0 0 2px var(--blue);
+    border-radius: 6px;
+  }
+
+  .month-detail {
+    margin-top: 16px;
+  }
+
   .m-chip {
     max-width: 100%;
     padding: 1px 5px;
@@ -1339,6 +1263,10 @@
         <i class="date-icon" data-lucide="calendar-days" size="31"></i>
         <h2 id="selectedDateTitle">--</h2>
         <button class="weekday-pill" type="button" data-action="jump-today" id="weekdayPill">--</button>
+        <div class="day-nav">
+          <button class="icon-button" type="button" data-action="shift-date" data-delta="-1" aria-label="前一天"><i data-lucide="chevron-left" size="24"></i></button>
+          <button class="icon-button" type="button" data-action="shift-date" data-delta="1" aria-label="後一天"><i data-lucide="chevron-right" size="24"></i></button>
+        </div>
       </div>
       <div class="today-summary">
         <i data-lucide="calendar-days"></i>
@@ -1365,17 +1293,8 @@
     <section class="agenda-panel" id="agendaPanel" aria-label="接下來">
       <div class="agenda-header">
         <h2 class="section-title">本週行程</h2>
-        <button class="filter-button" type="button" data-action="open-filters"><i data-lucide="sliders-horizontal"></i>篩選</button>
       </div>
-      <div class="mini-action-row" id="quickActions" aria-label="快速切換"></div>
-      <div class="search-row-wrap" id="searchWrap">
-        <label class="search-row" for="searchInput">
-          <span style="display:grid;place-items:center"><i data-lucide="search" size="19"></i></span>
-          <input id="searchInput" type="search" placeholder="搜尋科目、範圍或行程">
-          <button class="clear-search" id="clearSearch" type="button" data-action="clear-search" aria-label="清除搜尋"><i data-lucide="x" size="18"></i></button>
-        </label>
-      </div>
-      <div class="chip-row" id="typeChips"></div>
+      <div class="chip-row" id="subjectChips" aria-label="科目快選"></div>
       <div class="agenda-list" id="agendaList"></div>
     </section>
 
@@ -1397,6 +1316,7 @@
         <span><i style="--lg-color:#0b75d1"></i>備註</span>
         <span><i style="--lg-color:#7c43c6"></i>重要日程</span>
       </div>
+      <div class="agenda-list month-detail hidden" id="monthDayDetail" aria-label="當日行程明細"></div>
     </section>
   </main>
 
@@ -1404,36 +1324,14 @@
     <button class="scrim" type="button" data-action="close-panels" aria-label="關閉"></button>
     <aside class="drawer-panel" aria-label="選單">
       <div class="panel-head">
-        <h2 class="panel-title">國三班行事曆</h2>
+        <h2 class="panel-title" id="drawerTitle">國三行事曆</h2>
         <button class="icon-button" type="button" data-action="close-panels" aria-label="關閉選單"><i data-lucide="x"></i></button>
       </div>
-      <button class="drawer-link" type="button" data-action="nav-today"><i data-lucide="home"></i>今日行程</button>
-      <button class="drawer-link" type="button" data-action="nav-calendar"><i data-lucide="calendar-range"></i>本週行程</button>
-      <button class="drawer-link" type="button" data-action="quick-mock"><i data-lucide="file-check-2"></i>模考與複習</button>
-      <button class="drawer-link" type="button" data-action="show-notes"><i data-lucide="megaphone"></i>停課與備註</button>
       <button class="drawer-link" type="button" data-action="open-timetable"><i data-lucide="clipboard-list"></i>每週課表</button>
       <button class="drawer-link" type="button" data-action="open-notices"><i data-lucide="bell"></i>重要通知 <span class="badge" id="noticeBadge">0</span></button>
-      <a class="drawer-link" href="print.html" style="text-decoration:none;color:inherit"><i data-lucide="printer"></i>紙本進度表</a>
+      <a class="drawer-link" href="print.html" style="text-decoration:none;color:inherit"><i data-lucide="printer"></i>紙本進度表</a>
       <p class="drawer-note" id="drawerNote">載入中…</p>
     </aside>
-  </div>
-
-  <div class="sheet" id="filterSheet" aria-hidden="true">
-    <button class="scrim" type="button" data-action="close-panels" aria-label="關閉"></button>
-    <section class="sheet-panel" aria-label="篩選行程">
-      <div class="panel-head">
-        <h2 class="panel-title">篩選行程</h2>
-        <button class="icon-button" type="button" data-action="close-panels" aria-label="關閉篩選"><i data-lucide="x"></i></button>
-      </div>
-      <h3 class="section-title" style="font-size:1rem;margin-top:16px">類型</h3>
-      <div class="selector-grid" id="sheetTypeSelectors"></div>
-      <h3 class="section-title" style="font-size:1rem;margin-top:16px">科目</h3>
-      <div class="selector-grid" id="sheetSubjectSelectors"></div>
-      <div class="sheet-actions">
-        <button class="secondary-button" type="button" data-action="reset-filters"><i data-lucide="rotate-ccw" size="17"></i> 清除</button>
-        <button class="primary-button" type="button" data-action="close-panels"><i data-lucide="check" size="17"></i> 套用</button>
-      </div>
-    </section>
   </div>
 
   <div class="sheet" id="noticeSheet" aria-hidden="true">
@@ -1489,8 +1387,6 @@ const SUBJECT_COLORS = {
 };
 
 const TYPE_COLORS = {
-  "正課": "#086ed7",
-  "測驗": "#0986a7",
   "暑訓": "#f28c00",
   "模考與複習": "#ef3340",
   "重要提醒": "#7c43c6",
@@ -1508,12 +1404,7 @@ const SUBJECT_GROUPS = {
 const MOCK_TYPES = ["高名模考", "模考"];
 const REVIEW_TYPES = ["複習卷"];
 const NOTICE_TYPES = ["停課", "備註", "重要日程"];
-const TYPE_OPTIONS = ["全部", "正課", "測驗", "暑訓", "模考與複習", "停課與備註"];
-const QUICK_ITEMS = [
-  { key: "mock", label: "模考與複習", icon: "file-check-2", color: "#ef3340" },
-  { key: "notice", label: "停課", icon: "megaphone", color: "#f37014" },
-  { key: "note", label: "備註", icon: "notebook-pen", color: "#6c737d" },
-];
+const SUBJECT_OPTIONS = ["全部", "國文", "英文", "數學", "自然", "社會"];
 
 const WEEKDAY_LABELS = ["日", "一", "二", "三", "四", "五", "六"];
 const state = {
@@ -1521,13 +1412,11 @@ const state = {
   events: [],
   selectedDate: "",
   defaultDate: "",
-  activeType: "全部",
-  activeSubjects: new Set(),
-  search: "",
-  activeEventId: null,
-  nav: "today",
+  activeSubject: "全部",
+  copyText: "",
   view: "list",
   monthCursor: "",
+  monthDetailDate: "",
 };
 
 const el = (id) => document.getElementById(id);
@@ -1553,6 +1442,7 @@ fetch("events.json?v=" + Date.now())
 function hydrateStatic(data) {
   el("siteTitle").textContent = data.site_title;
   document.title = data.site_title;
+  el("drawerTitle").textContent = data.site_title;
   el("updatedText").textContent = data.generated_at + " 更新";
   el("drawerNote").textContent = "資料區間：" + formatShortDate(data.range.start) + " - " + formatShortDate(data.range.end) + "。實際考程以本行事曆為準，停課日當天課程全部暫停。";
   renderTimetable(data);
@@ -1623,11 +1513,9 @@ function render() {
   if (monthMode) renderMonth();
   renderHero();
   renderWeekStrip();
-  renderQuickActions();
-  renderTypeChips();
+  renderSubjectChips();
   renderAgenda();
   renderRecent();
-  renderSheets();
   updateNoticeBadge();
   syncIcons();
 }
@@ -1685,7 +1573,7 @@ function renderMonth() {
   const bars = [];
   const singles = new Map();
   const closed = new Set();
-  state.events.filter(isNoticeEvent).forEach((event) => {
+  state.events.filter((event) => isNoticeEvent(event) && !isMockEvent(event)).forEach((event) => {
     const endExcl = event.allDay && event.endDate > event.startDate ? event.endDate : addDaysKey(event.startDate, 1);
     if (event.type === "停課") {
       for (let date = event.startDate; date < endExcl; date = addDaysKey(date, 1)) closed.add(date);
@@ -1697,6 +1585,10 @@ function renderMonth() {
       list.push({ label: tagText(event), color: event.color });
       singles.set(event.startDate, list);
     }
+  });
+  // 高名模考：每回（一～五）合併畫一條紅色條，不逐日放標籤
+  mockRounds().forEach((round) => {
+    bars.push({ start: round.startDate, endExcl: addDaysKey(round.endDate, 1), color: TYPE_COLORS["模考與複習"], label: `模考${round.label}`, date: round.startDate });
   });
   // 暑訓模考週（僅暑訓學生）：以設定推得的一～五畫橘色條
   if (si && si.mock_week_start) {
@@ -1723,6 +1615,7 @@ function renderMonth() {
       const classes = ["m-cell"];
       if (closed.has(date)) classes.push("closed");
       if (date === todayKey) classes.push("today");
+      if (date === state.monthDetailDate) classes.push("selected");
       cells += `<button class="${classes.join(" ")}" type="button" data-action="month-pick" data-date="${date}" aria-label="${formatLongDate(date)}"><span class="m-date">${Number(date.slice(8))}</span>${shown}${more}</button>`;
     }
     let barHtml = "";
@@ -1735,11 +1628,28 @@ function renderMonth() {
     html += `<div class="m-week">${cells}${barHtml}</div>`;
   }
   el("monthWeeks").innerHTML = html;
+  renderMonthDetail();
+}
+
+// 月曆模式點日期：直接在月曆下方展開當天全部行程（含複習卷、暑訓）
+function renderMonthDetail() {
+  const box = el("monthDayDetail");
+  const date = state.monthDetailDate;
+  if (!date || monthOf(date) !== state.monthCursor) {
+    box.classList.add("hidden");
+    box.innerHTML = "";
+    return;
+  }
+  const events = eventsForDate(date, false);
+  box.classList.remove("hidden");
+  box.innerHTML = events.length
+    ? dateGroupTemplate({ date, events })
+    : `<section class="date-group"><div class="date-group-head"><span>${formatLongDate(date)}</span></div><div class="empty-state">這天沒有行程。</div></section>`;
 }
 
 function renderHero() {
   const selected = parseLocal(state.selectedDate);
-  const dayEvents = eventsForDate(state.selectedDate, true);
+  const dayEvents = eventsForDate(state.selectedDate, false);
   el("selectedDateTitle").textContent = `${selected.getMonth() + 1}月${selected.getDate()}日`;
   el("weekdayPill").textContent = "週" + WEEKDAY_LABELS[selected.getDay()];
   el("selectedDayLabel").textContent = state.selectedDate === localDateKey(new Date()) ? "今天" : "這天";
@@ -1768,52 +1678,34 @@ function renderWeekStrip() {
   }).join("");
 }
 
-function renderQuickActions() {
-  const counts = quickCounts();
-  el("quickActions").innerHTML = QUICK_ITEMS.map((item) => `
-    <button class="mini-action" type="button" data-action="quick-${item.key}" style="--action-color:${item.color}" aria-label="${item.label} ${counts[item.key]} 筆">
-      <i data-lucide="${item.icon}" size="17"></i>
-      <span>${item.label}</span>
-    </button>
-  `).join("");
-}
-
-function renderTypeChips() {
-  el("typeChips").innerHTML = TYPE_OPTIONS.map((type) => `
-    <button class="chip ${state.activeType === type ? "on" : ""}" type="button" data-action="set-type" data-type="${escapeAttr(type)}">${escapeHTML(type)}</button>
-  `).join("");
+function renderSubjectChips() {
+  el("subjectChips").innerHTML = SUBJECT_OPTIONS.map((subject) => {
+    const active = state.activeSubject === subject;
+    const color = SUBJECT_COLORS[subject];
+    const style = active && color ? ` style="background:${color};border-color:transparent;color:#fff;box-shadow:none"` : "";
+    return `<button class="chip ${active ? "on" : ""}" type="button" data-action="set-subject" data-subject="${escapeAttr(subject)}"${style}>${escapeHTML(subject)}</button>`;
+  }).join("");
 }
 
 function renderAgenda() {
   const days = weekDays(state.selectedDate);
   const groups = days.map((date) => ({ date, events: eventsForDate(date, true) }))
     .filter((group) => group.events.length > 0);
-  el("clearSearch").classList.toggle("show", !!state.search);
   el("agendaList").innerHTML = groups.length
     ? groups.map((group) => dateGroupTemplate(group)).join("")
-    : '<div class="empty-state">本週沒有符合篩選的行程。可以清除篩選或換一天看看。</div>';
+    : '<div class="empty-state">本週沒有符合條件的行程。可以點「全部」或換一天看看。</div>';
 }
 
 function renderRecent() {
-  const items = importantEvents().slice(0, 5);
-  el("recentList").innerHTML = items.length
-    ? items.map((event) => recentItemTemplate(event)).join("")
-    : '<div class="empty-state">目前沒有停課、模考或備註。</div>';
-  el("noticeList").innerHTML = importantEvents().map((event) => recentItemTemplate(event)).join("") || '<div class="empty-state">目前沒有通知。</div>';
-}
-
-function renderSheets() {
-  const subjects = distinct(state.events.map((event) => groupSubject(event.subject)).filter(Boolean));
-  el("sheetTypeSelectors").innerHTML = TYPE_OPTIONS.map((type) => `
-    <button class="selector ${state.activeType === type ? "on" : ""}" type="button" data-action="set-type" data-type="${escapeAttr(type)}">${escapeHTML(type)}</button>
-  `).join("");
-  el("sheetSubjectSelectors").innerHTML = subjects.map((subject) => `
-    <button class="selector ${state.activeSubjects.has(subject) ? "on" : ""}" type="button" data-action="toggle-subject" data-subject="${escapeAttr(subject)}">${escapeHTML(subject)}</button>
-  `).join("");
+  const items = noticeItems();
+  el("recentList").innerHTML = items.slice(0, 5).map(noticeItemTemplate).join("")
+    || '<div class="empty-state">目前沒有停課、模考或備註。</div>';
+  el("noticeList").innerHTML = items.map(noticeItemTemplate).join("")
+    || '<div class="empty-state">目前沒有通知。</div>';
 }
 
 function updateNoticeBadge() {
-  const count = importantEvents().length;
+  const count = noticeItems().length;
   el("noticeBadge").textContent = count > 9 ? "9+" : String(count);
 }
 
@@ -1869,6 +1761,21 @@ function recentItemTemplate(event) {
     </button>`;
 }
 
+function noticeItemTemplate(item) {
+  if (item.kind === "round") return mockRoundTemplate(item.round);
+  return recentItemTemplate(item.event);
+}
+
+function mockRoundTemplate(round) {
+  return `
+    <button class="recent-item" type="button" data-action="open-round" data-round="${escapeAttr(round.label)}" style="--event-color:${TYPE_COLORS["模考與複習"]}">
+      <span class="recent-kind"><i data-lucide="file-check-2"></i></span>
+      <span class="recent-text">【模考】高名模考 ${escapeHTML(round.label)}（一～五晚）</span>
+      <span class="recent-date">${formatMonthDay(round.startDate)}–${formatMonthDay(round.endDate)}</span>
+      <span class="chevron"><i data-lucide="chevron-right" size="18"></i></span>
+    </button>`;
+}
+
 function eventsForDate(date, applyFilters) {
   return state.events
     .filter((event) => occursOn(event, date))
@@ -1876,37 +1783,42 @@ function eventsForDate(date, applyFilters) {
     .sort(compareEvents);
 }
 
-function importantEvents() {
-  return state.events
-    .filter(isNoticeEvent)
-    .filter((event) => event.startDate >= state.defaultDate || (event.allDay && event.endDate > state.defaultDate))
-    .sort(compareTimelineEvents);
+// 高名模考依「第X回」分組（顯示層整合用；資料層仍是逐場事件）
+function mockRounds() {
+  const groups = new Map();
+  state.events.filter(isMockEvent).forEach((event) => {
+    const match = event.title.match(/第.+?回/);
+    const key = match ? match[0] : event.startDate;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(event);
+  });
+  return [...groups.entries()].map(([label, events]) => {
+    events.sort(compareTimelineEvents);
+    return {
+      label,
+      events,
+      startDate: events[0].startDate,
+      endDate: events[events.length - 1].startDate,
+    };
+  }).sort((a, b) => a.startDate.localeCompare(b.startDate));
 }
 
-function quickCounts() {
-  const week = weekDays(state.selectedDate);
-  return {
-    today: eventsForDate(state.selectedDate, false).length,
-    week: state.events.filter((event) => week.some((date) => occursOn(event, date))).length,
-    mock: state.events.filter(isExamEvent).length,
-    notice: state.events.filter((event) => event.type === "停課").length,
-    note: state.events.filter((event) => event.type === "備註").length,
-  };
+// 重要提醒清單：高名模考每回一筆，其餘（停課/備註/重要日程）逐筆
+function noticeItems() {
+  const rounds = mockRounds()
+    .filter((round) => round.endDate >= state.defaultDate)
+    .map((round) => ({ kind: "round", round, sortDate: round.startDate }));
+  const others = state.events
+    .filter((event) => isNoticeEvent(event) && !isMockEvent(event))
+    .filter((event) => event.startDate >= state.defaultDate || (event.allDay && event.endDate > state.defaultDate))
+    .map((event) => ({ kind: "event", event, sortDate: event.startDate }));
+  return [...rounds, ...others].sort((a, b) => a.sortDate.localeCompare(b.sortDate));
 }
 
 function matchesFilters(event) {
-  const typeMatch = matchesType(event, state.activeType);
-  const subjectMatch = state.activeSubjects.size === 0 || state.activeSubjects.has(groupSubject(event.subject));
-  const query = state.search.trim().toLowerCase();
-  const queryMatch = !query || [event.title, event.type, event.subject, groupSubject(event.subject), event.detail].join(" ").toLowerCase().includes(query);
-  return typeMatch && subjectMatch && queryMatch;
-}
-
-function matchesType(event, type) {
-  if (type === "全部") return true;
-  if (type === "停課與備註") return ["停課", "備註", "重要日程"].includes(event.type);
-  if (type === "模考與複習") return isExamEvent(event);
-  return event.type === type;
+  if (state.activeSubject === "全部") return true;
+  if (event.type === "停課") return true; // 停課攸關安全，篩科目時仍顯示
+  return groupSubject(event.subject) === state.activeSubject;
 }
 
 function isMockEvent(event) {
@@ -1977,12 +1889,6 @@ function cleanTitle(event) {
   return stripped;
 }
 
-function typeLabel(event) {
-  if (isExamEvent(event)) return "模考與複習";
-  if (event.type === "重要日程") return "停課與備註";
-  return event.type;
-}
-
 function tagText(event) {
   if (isMockEvent(event)) return "模考";
   if (isReviewEvent(event)) return groupSubject(event.subject || "複習");
@@ -2020,7 +1926,6 @@ function eventMeta(event) {
   if (scope) bits.push(`<span><i data-lucide="target" size="17"></i>${escapeHTML(scope)}</span>`);
   if (!scope && content) bits.push(`<span><i data-lucide="file-text" size="17"></i>${escapeHTML(content)}</span>`);
   if (paper) bits.push(`<span><i data-lucide="file-text" size="17"></i>${escapeHTML(paper)}</span>`);
-  if (!scope && !content && !paper && event.type === "暑訓") bits.push('<span><i data-lucide="map-pin" size="17"></i>自強教室</span>');
   return bits.join("");
 }
 
@@ -2030,7 +1935,6 @@ function sideMeta(event) {
   if (event.type === "停課") return '<i data-lucide="bell" size="19"></i><span>停課</span>';
   if (event.type === "備註" || event.type === "重要日程") return '<i data-lucide="bell" size="19"></i><span>請留意</span>';
   if (isMockEvent(event)) return '<i data-lucide="bell" size="19"></i><span>準時</span>';
-  if (event.type === "暑訓") return '<i data-lucide="map-pin" size="19"></i><span>自強教室</span>';
   return "";
 }
 
@@ -2042,8 +1946,6 @@ function compactDetail(event) {
   if (book && scope) return `${book}・${scope}`;
   if (book || scope) return book || scope;
   if (event.detail) return event.detail.replace(/\n/g, "・");
-  if (event.type === "正課") return "冊別 B1";
-  if (event.type === "暑訓") return "自強教室";
   return event.type;
 }
 
@@ -2141,12 +2043,39 @@ function closePanels() {
 function openEvent(id) {
   const event = state.events.find((item) => item.id === id);
   if (!event) return;
-  state.activeEventId = id;
+  const time = `${formatLongDate(event.startDate)}　${compactTime(event)}`;
+  const detail = event.detail || compactDetail(event) || "（無其他說明）";
   el("modalTag").textContent = tagText(event);
   el("modalTag").style.background = event.color;
   el("modalTitle").textContent = event.title;
-  el("modalTime").querySelector("span").textContent = `${formatLongDate(event.startDate)}　${compactTime(event)}`;
-  el("modalDetail").textContent = event.detail || compactDetail(event) || "（無其他說明）";
+  el("modalTime").querySelector("span").textContent = time;
+  el("modalDetail").textContent = detail;
+  state.copyText = `${event.title}\n${time}\n${event.detail || ""}`.trim();
+  openPanel("eventModal");
+}
+
+function openMockRound(label) {
+  const round = mockRounds().find((item) => item.label === label);
+  if (!round) return;
+  const time = `${formatLongDate(round.startDate)} – ${formatLongDate(round.endDate)}　晚上測驗及輔導時段`;
+  const lines = round.events.map((event) => {
+    const scope = extractDetail(event.detail, "範圍");
+    const note = extractDetail(event.detail, "備註");
+    const bits = [`${formatMonthDay(event.startDate)}（${WEEKDAY_LABELS[parseLocal(event.startDate).getDay()]}）`, `${event.subject}　${compactTime(event)}`];
+    if (scope) bits.push(`範圍 ${scope}`);
+    if (note) bits.push(note);
+    return bits.join("　");
+  });
+  const paper = extractDetail(round.events[0].detail, "卷別");
+  const official = (round.events[0].detail || "").match(/官方模考日 (\d{4}-\d{2}-\d{2})/);
+  if (paper) lines.push(`卷別：${paper}`);
+  if (official) lines.push(`官方模考日 ${formatMonthDay(official[1])}（日），本班提前於當週一～五晚上考完`);
+  el("modalTag").textContent = "模考";
+  el("modalTag").style.background = TYPE_COLORS["模考與複習"];
+  el("modalTitle").textContent = `高名模考 ${round.label}`;
+  el("modalTime").querySelector("span").textContent = time;
+  el("modalDetail").textContent = lines.join("\n");
+  state.copyText = `高名模考 ${round.label}\n${time}\n${lines.join("\n")}`;
   openPanel("eventModal");
 }
 
@@ -2158,21 +2087,13 @@ function showToast(message) {
   showToast.timer = setTimeout(() => toast.classList.remove("show"), 1900);
 }
 
-function resetFilters() {
-  state.activeType = "全部";
-  state.activeSubjects.clear();
-  state.search = "";
-  el("searchInput").value = "";
-  render();
-}
-
-function jumpToFirstMatching(predicate) {
-  const target = state.events.find(predicate);
-  if (target) state.selectedDate = target.startDate;
-}
-
-function setActiveType(type) {
-  state.activeType = type;
+function shiftSelectedDate(delta) {
+  const next = addDaysKey(state.selectedDate, delta);
+  if (!state.data || next < state.data.range.start || next > state.data.range.end) {
+    showToast("已到行事曆範圍邊界");
+    return;
+  }
+  state.selectedDate = next;
   render();
 }
 
@@ -2183,12 +2104,15 @@ document.addEventListener("click", async (event) => {
 
   if (action === "open-menu") openPanel("menuDrawer");
   if (action === "open-notices") openPanel("noticeSheet");
-  if (action === "open-filters") openPanel("filterSheet");
   if (action === "open-timetable") openPanel("timetableSheet");
   if (action === "close-panels") closePanels();
 
   if (action === "set-view") {
     state.view = trigger.dataset.view;
+    if (state.view === "month") {
+      state.monthCursor = monthOf(state.selectedDate);
+      state.monthDetailDate = state.selectedDate;
+    }
     render();
     window.scrollTo({ top: 0 });
   }
@@ -2199,117 +2123,39 @@ document.addEventListener("click", async (event) => {
   }
 
   if (action === "month-pick") {
-    state.view = "list";
+    state.monthDetailDate = trigger.dataset.date;
     state.selectedDate = trigger.dataset.date;
-    state.nav = "today";
     render();
-    scrollToId("todayPanel");
   }
 
   if (action === "select-date") {
     state.selectedDate = trigger.dataset.date;
-    state.nav = "today";
     render();
   }
 
-  if (action === "jump-today" || action === "nav-today") {
+  if (action === "shift-date") {
+    shiftSelectedDate(Number(trigger.dataset.delta));
+  }
+
+  if (action === "jump-today") {
     closePanels();
     state.view = "list";
     state.selectedDate = state.defaultDate;
-    state.nav = "today";
     render();
     scrollToId("todayPanel");
   }
 
-  if (action === "nav-calendar") {
-    closePanels();
-    state.view = "list";
-    state.nav = "calendar";
+  if (action === "set-subject") {
+    state.activeSubject = trigger.dataset.subject;
     render();
-    scrollToId("agendaPanel");
-  }
-
-  if (action === "nav-search") {
-    closePanels();
-    state.view = "list";
-    state.nav = "search";
-    render();
-    scrollToId("agendaPanel");
-    setTimeout(() => el("searchInput").focus(), 240);
-  }
-
-  if (action === "set-type") {
-    setActiveType(trigger.dataset.type);
-  }
-
-  if (action === "toggle-subject") {
-    const subject = trigger.dataset.subject;
-    if (state.activeSubjects.has(subject)) state.activeSubjects.delete(subject);
-    else state.activeSubjects.add(subject);
-    render();
-  }
-
-  if (action === "reset-filters") resetFilters();
-  if (action === "clear-search") {
-    state.search = "";
-    el("searchInput").value = "";
-    render();
-  }
-
-  if (action === "quick-today") {
-    state.view = "list";
-    state.activeType = "全部";
-    state.selectedDate = state.defaultDate;
-    state.nav = "today";
-    render();
-    scrollToId("todayPanel");
-  }
-
-  if (action === "quick-week") {
-    state.view = "list";
-    state.activeType = "全部";
-    state.nav = "calendar";
-    render();
-    scrollToId("agendaPanel");
-  }
-
-  if (action === "quick-mock") {
-    closePanels();
-    state.view = "list";
-    jumpToFirstMatching(isExamEvent);
-    state.activeType = "模考與複習";
-    state.nav = "calendar";
-    render();
-    scrollToId("agendaPanel");
-  }
-
-  if (action === "quick-notice") {
-    state.view = "list";
-    jumpToFirstMatching((event) => event.type === "停課");
-    state.activeType = "停課與備註";
-    state.nav = "calendar";
-    render();
-    scrollToId("agendaPanel");
-  }
-
-  if (action === "quick-note" || action === "show-notes") {
-    closePanels();
-    state.view = "list";
-    jumpToFirstMatching((event) => event.type === "停課" || event.type === "備註");
-    state.activeType = "停課與備註";
-    state.nav = "calendar";
-    render();
-    scrollToId("agendaPanel");
   }
 
   if (action === "open-event") openEvent(trigger.dataset.eventId);
+  if (action === "open-round") openMockRound(trigger.dataset.round);
 
-  if (action === "copy-event" && state.activeEventId) {
-    const selected = state.events.find((item) => item.id === state.activeEventId);
-    if (!selected) return;
-    const text = `${selected.title}\n${formatLongDate(selected.startDate)} ${compactTime(selected)}\n${selected.detail || ""}`.trim();
+  if (action === "copy-event" && state.copyText) {
     try {
-      await navigator.clipboard.writeText(text);
+      await navigator.clipboard.writeText(state.copyText);
       showToast("已複製行程資訊");
     } catch {
       showToast("瀏覽器未允許複製，可直接查看詳情");
@@ -2317,10 +2163,23 @@ document.addEventListener("click", async (event) => {
   }
 });
 
-el("searchInput").addEventListener("input", (event) => {
-  state.search = event.target.value;
-  render();
-});
+// 今日卡片左右滑切換日期（橫向位移夠大且大於縱向位移才觸發，避免和捲動衝突）
+(() => {
+  const panel = el("todayPanel");
+  let startX = 0;
+  let startY = 0;
+  panel.addEventListener("touchstart", (event) => {
+    startX = event.touches[0].clientX;
+    startY = event.touches[0].clientY;
+  }, { passive: true });
+  panel.addEventListener("touchend", (event) => {
+    const dx = event.changedTouches[0].clientX - startX;
+    const dy = event.changedTouches[0].clientY - startY;
+    if (Math.abs(dx) > 56 && Math.abs(dx) > Math.abs(dy) * 1.4) {
+      shiftSelectedDate(dx < 0 ? 1 : -1);
+    }
+  }, { passive: true });
+})();
 
 window.addEventListener("load", syncIcons);
 </script>

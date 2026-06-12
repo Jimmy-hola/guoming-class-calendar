@@ -1,0 +1,442 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>國三行事曆工具入口</title>
+  <style>
+    :root {
+      --ink: #17202a;
+      --muted: #5f6f7a;
+      --line: #d8e0e5;
+      --paper: #ffffff;
+      --soft: #f5f7f8;
+      --blue: #1f6f9f;
+      --blue-deep: #164f73;
+      --green: #2f7d57;
+      --amber: #9a6419;
+      --red: #a33a36;
+      --shadow: 0 10px 28px rgba(21, 38, 54, .08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: #eef3f5;
+      font-family: "Microsoft JhengHei", "PingFang TC", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.65;
+    }
+
+    a { color: inherit; }
+
+    .shell {
+      width: min(1120px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 32px 0 48px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(280px, .65fr);
+      gap: 24px;
+      align-items: stretch;
+      margin-bottom: 22px;
+    }
+
+    .intro,
+    .quick {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .intro {
+      padding: 28px;
+    }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      color: var(--blue);
+      font-size: .92rem;
+      font-weight: 700;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.8rem, 4vw, 3rem);
+      line-height: 1.15;
+      letter-spacing: 0;
+    }
+
+    .lead {
+      margin: 16px 0 0;
+      max-width: 760px;
+      color: var(--muted);
+      font-size: 1.05rem;
+    }
+
+    .quick {
+      padding: 22px;
+    }
+
+    .quick h2,
+    .section h2,
+    .tool h3 {
+      margin: 0;
+      line-height: 1.25;
+      letter-spacing: 0;
+    }
+
+    .quick h2,
+    .section h2 {
+      font-size: 1.3rem;
+    }
+
+    .quick ol {
+      margin: 14px 0 0;
+      padding-left: 1.4rem;
+    }
+
+    .quick li + li { margin-top: 8px; }
+
+    .note {
+      margin-top: 14px;
+      padding: 12px 14px;
+      color: #3e4b54;
+      background: #eef6f1;
+      border-left: 4px solid var(--green);
+      border-radius: 6px;
+      font-size: .95rem;
+    }
+
+    .section {
+      margin-top: 22px;
+      padding: 24px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .section > p {
+      margin: 8px 0 0;
+      color: var(--muted);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+      margin-top: 18px;
+    }
+
+    .tool {
+      display: flex;
+      flex-direction: column;
+      min-height: 100%;
+      padding: 20px;
+      background: var(--soft);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+
+    .tool h3 {
+      font-size: 1.12rem;
+    }
+
+    .tool p {
+      margin: 10px 0 0;
+      color: var(--muted);
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 42px;
+      padding: 9px 14px;
+      color: #fff;
+      background: var(--blue);
+      border: 1px solid var(--blue);
+      border-radius: 6px;
+      font-weight: 700;
+      text-decoration: none;
+      cursor: pointer;
+      font: inherit;
+    }
+
+    .button:hover { background: var(--blue-deep); }
+
+    .button.secondary {
+      color: var(--blue-deep);
+      background: #fff;
+      border-color: #9fc5dc;
+    }
+
+    .button.secondary:hover { background: #eaf4fa; }
+
+    .button.publish {
+      background: var(--green);
+      border-color: var(--green);
+    }
+
+    .button.publish:hover { background: #256946; }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 18px;
+    }
+
+    .step {
+      padding: 16px;
+      background: var(--soft);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+
+    .step strong {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--blue-deep);
+    }
+
+    .codebox {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+      margin-top: 12px;
+      padding: 10px;
+      background: #17202a;
+      border-radius: 8px;
+    }
+
+    code {
+      color: #eef6f8;
+      font-family: Consolas, "Cascadia Mono", monospace;
+      font-size: .92rem;
+      overflow-wrap: anywhere;
+    }
+
+    .copy {
+      min-width: 72px;
+      min-height: 34px;
+      padding: 6px 10px;
+      color: #17202a;
+      background: #e8f4ef;
+      border: 0;
+      border-radius: 6px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .warning {
+      border-left: 4px solid var(--amber);
+      background: #fff7ea;
+    }
+
+    .danger {
+      border-left-color: var(--red);
+      background: #fff0ef;
+    }
+
+    .trouble {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 16px;
+    }
+
+    .trouble div {
+      padding: 16px;
+      background: var(--soft);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+
+    .trouble strong {
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .footer {
+      margin-top: 22px;
+      color: var(--muted);
+      text-align: center;
+      font-size: .9rem;
+    }
+
+    @media (max-width: 860px) {
+      .hero,
+      .grid,
+      .steps,
+      .trouble {
+        grid-template-columns: 1fr;
+      }
+
+      .shell {
+        width: min(100% - 20px, 1120px);
+        padding-top: 16px;
+      }
+
+      .intro,
+      .quick,
+      .section {
+        padding: 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="hero" aria-labelledby="page-title">
+      <div class="intro">
+        <p class="eyebrow">國三行事曆本機工具</p>
+        <h1 id="page-title">工具入口</h1>
+        <p class="lead">
+          這一頁把「預覽」、「手機 QR code」、「發布」整理在同一個地方。
+          如果你不熟 Git、Node 或命令列，照著卡片順序操作就可以。
+        </p>
+      </div>
+
+      <aside class="quick" aria-labelledby="quick-title">
+        <h2 id="quick-title">最常用流程</h2>
+        <ol>
+          <li>改完 <strong>data</strong> 資料夾裡的 CSV。</li>
+          <li>先按 <strong>預覽</strong>，確認電腦和手機看起來都正常。</li>
+          <li>確認無誤後，再按 <strong>發布</strong> 上傳到 GitHub Pages。</li>
+        </ol>
+        <div class="note">不確定時，先預覽，不要急著發布。</div>
+      </aside>
+    </section>
+
+    <section class="section" aria-labelledby="tools-title">
+      <h2 id="tools-title">雙擊工具</h2>
+      <p>請依你的電腦系統選擇工具。若瀏覽器沒有直接執行，請回到資料夾裡雙擊同名檔案。</p>
+
+      <div class="grid">
+        <article class="tool">
+          <h3>預覽與手機 QR code</h3>
+          <p>
+            用在正式發布前。它會啟動本機網站，並打開 QR code 頁面，讓手機在同一個 Wi-Fi 下掃描預覽。
+          </p>
+          <div class="actions">
+            <a class="button" href="./預覽.bat">Windows 預覽</a>
+            <a class="button secondary" href="./預覽.command">Mac 預覽</a>
+            <a class="button secondary" href="http://localhost:8765/qr">開 QR code 頁</a>
+          </div>
+          <div class="codebox">
+            <code>node tools\serve.mjs</code>
+            <button class="copy" data-copy="node tools\serve.mjs">複製</button>
+          </div>
+        </article>
+
+        <article class="tool">
+          <h3>發布到 GitHub Pages</h3>
+          <p>
+            用在資料確認無誤後。它會重新產生網站資料，提交變更，並推送到 GitHub，讓線上網站更新。
+          </p>
+          <div class="actions">
+            <a class="button publish" href="./發布.bat">Windows 發布</a>
+            <a class="button secondary" href="./發布.command">Mac 發布</a>
+            <a class="button secondary" href="https://jimmy-hola.github.io/guoming-class-calendar/">開線上網站</a>
+          </div>
+          <div class="codebox">
+            <code>node tools\build.mjs</code>
+            <button class="copy" data-copy="node tools\build.mjs">複製</button>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="decision-title">
+      <h2 id="decision-title">我現在該按哪一個？</h2>
+      <div class="steps">
+        <div class="step">
+          <strong>只是想看目前做得怎樣</strong>
+          按「預覽」。這不會上傳，不會影響線上網站。
+        </div>
+        <div class="step">
+          <strong>要讓手機掃 QR code</strong>
+          先按「預覽」，再開 QR code 頁。手機和電腦要連同一個 Wi-Fi。
+        </div>
+        <div class="step">
+          <strong>已經確認資料正確</strong>
+          按「發布」。發布後 GitHub Pages 通常需要等一下才會更新。
+        </div>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="what-title">
+      <h2 id="what-title">背後實際做了什麼？</h2>
+      <div class="steps">
+        <div class="step">
+          <strong>data 資料夾</strong>
+          放行事曆來源 CSV，例如課表、特殊日、複習卷、模擬考日期。
+        </div>
+        <div class="step">
+          <strong>tools/build.mjs</strong>
+          把 CSV 轉成網站使用的 <code style="color:#17202a">docs/events.json</code>。
+        </div>
+        <div class="step">
+          <strong>tools/serve.mjs</strong>
+          開本機預覽網站，網址通常是 <code style="color:#17202a">http://localhost:8765/</code>。
+        </div>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="trouble-title">
+      <h2 id="trouble-title">常見狀況</h2>
+      <div class="trouble">
+        <div class="warning">
+          <strong>點按工具後沒有反應</strong>
+          瀏覽器可能阻擋直接執行 bat 或 command。請回到資料夾，直接雙擊「預覽.bat」或「發布.bat」。
+        </div>
+        <div class="warning">
+          <strong>手機打不開預覽</strong>
+          確認手機和電腦在同一個 Wi-Fi。若仍不行，先用電腦開 <code style="color:#17202a">http://localhost:8765/qr</code>。
+        </div>
+        <div class="danger">
+          <strong>發布時出現 GitHub 錯誤</strong>
+          通常是網路、登入權限或遠端資料需要同步。先不要重複亂按，把錯誤訊息截圖或貼給維護者。
+        </div>
+        <div class="warning">
+          <strong>線上網站還沒更新</strong>
+          GitHub Pages 可能需要等待一小段時間。先重新整理頁面，或等 1 到 3 分鐘再看。
+        </div>
+      </div>
+    </section>
+
+    <p class="footer">建議把這個檔案當作入口：先預覽，確認後再發布。</p>
+  </main>
+
+  <script>
+    const buttons = document.querySelectorAll("[data-copy]");
+    buttons.forEach((button) => {
+      button.addEventListener("click", async () => {
+        const text = button.getAttribute("data-copy");
+        try {
+          await navigator.clipboard.writeText(text);
+          const old = button.textContent;
+          button.textContent = "已複製";
+          window.setTimeout(() => { button.textContent = old; }, 1200);
+        } catch {
+          button.textContent = "請手動複製";
+        }
+      });
+    });
+  </script>
+</body>
+</html>
