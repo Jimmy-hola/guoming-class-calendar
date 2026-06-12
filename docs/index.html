@@ -4,264 +4,2325 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>班級行事曆</title>
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.19/index.global.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.19/locales-all.global.min.js"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
 <style>
   :root {
-    --bg: #f5f6f8; --card: #ffffff; --text: #2c3e50; --muted: #78909c;
+    --bg: #f7fafc;
+    --paper: #ffffff;
+    --paper-soft: #f8fbfd;
+    --ink: #111827;
+    --navy: #073e63;
+    --blue: #0b6fdb;
+    --blue-dark: #045cb5;
+    --teal: #0b87a5;
+    --line: #d8e2eb;
+    --muted: #657085;
+    --muted-2: #8a96a8;
+    --danger: #ef3340;
+    --shadow: 0 18px 38px rgba(6, 37, 62, 0.1);
+    --radius: 8px;
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
   }
+
   * { box-sizing: border-box; }
-  body { margin: 0; font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", "Noto Sans TC", sans-serif; background: var(--bg); color: var(--text); }
-  header { background: #1a5276; color: #fff; padding: 14px 16px 10px; }
-  header h1 { margin: 0; font-size: 1.15rem; font-weight: 700; }
-  header .updated { font-size: 0.75rem; opacity: 0.85; margin-top: 4px; }
-  .filters { padding: 8px 12px 4px; display: flex; flex-wrap: wrap; gap: 6px; }
-  .chip { border: 1px solid #b0bec5; background: #fff; color: var(--text); border-radius: 14px; padding: 4px 12px; font-size: 0.8rem; cursor: pointer; user-select: none; }
-  .chip.on { background: #1a5276; border-color: #1a5276; color: #fff; }
-  .legend { padding: 2px 12px 8px; display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: 0.72rem; color: var(--muted); }
-  .legend span::before { content: "●"; margin-right: 3px; color: var(--c); }
-  #calendar { max-width: 980px; margin: 0 auto 24px; padding: 0 8px; background: transparent; }
-  .fc { background: var(--card); border-radius: 10px; padding: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
-  .fc .fc-toolbar-title { font-size: 1.05rem; }
-  .fc .fc-button { font-size: 0.8rem; padding: 4px 8px; background: #1a5276; border-color: #1a5276; }
-  .fc-event { cursor: pointer; font-size: 0.74rem; border: none; }
-  .fc-event.type-高名模考 { box-shadow: inset 3px 0 0 #b71c1c; font-weight: 700; }
-  /* 詳情視窗 */
-  #overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: none; align-items: center; justify-content: center; z-index: 99; padding: 20px; }
-  #overlay.show { display: flex; }
-  #modal { background: #fff; border-radius: 12px; max-width: 420px; width: 100%; padding: 18px 20px; }
-  #modal h2 { margin: 0 0 6px; font-size: 1.05rem; }
-  #modal .when { color: var(--muted); font-size: 0.85rem; margin-bottom: 10px; }
-  #modal .body { white-space: pre-wrap; font-size: 0.9rem; line-height: 1.6; }
-  #modal .tag { display: inline-block; font-size: 0.72rem; border-radius: 10px; padding: 2px 10px; color: #fff; margin-bottom: 8px; }
-  #modal button { margin-top: 14px; width: 100%; padding: 9px; border: none; border-radius: 8px; background: #1a5276; color: #fff; font-size: 0.9rem; cursor: pointer; }
-  /* 課表視窗 */
-  #ttModal { background: #fff; border-radius: 14px; max-width: 480px; width: 100%; padding: 0; max-height: 85vh; overflow-y: auto; }
-  .tt-head { background: linear-gradient(135deg, #1a5276, #2e86c1); color: #fff; padding: 16px 20px 13px; }
-  .tt-head h2 { margin: 0; font-size: 1.1rem; }
-  .tt-head .tt-sub { font-size: 0.75rem; opacity: 0.9; margin-top: 3px; }
-  #ttBody { padding: 12px 14px 0; }
-  .tt-note { background: #fff8e1; border-left: 4px solid #f9a825; border-radius: 6px; padding: 8px 12px; font-size: 0.8rem; line-height: 1.6; margin: 0 0 10px; }
-  .tt-day { border: 1px solid #e3e8ee; border-radius: 10px; margin-bottom: 10px; overflow: hidden; }
-  .tt-day-head { display: flex; align-items: center; gap: 8px; background: #eef3f7; padding: 6px 12px; font-weight: 700; font-size: 0.85rem; color: #1a5276; }
-  .tt-day-head .badge { width: 22px; height: 22px; border-radius: 50%; background: #1a5276; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; flex: none; }
-  .tt-day.weekend .tt-day-head { background: #fdf2e3; color: #b9770e; }
-  .tt-day.weekend .badge { background: #e67e22; }
-  .tt-row { display: flex; align-items: center; gap: 8px; padding: 7px 12px; border-top: 1px dashed #eceff1; font-size: 0.84rem; }
-  .tt-time { color: var(--muted); font-variant-numeric: tabular-nums; font-size: 0.76rem; min-width: 86px; flex: none; }
-  .tt-subj { color: #fff; border-radius: 10px; padding: 1px 9px; font-size: 0.72rem; font-weight: 600; flex: none; }
-  #ttModal .tt-close { margin: 6px 14px 16px; width: calc(100% - 28px); padding: 9px; border: none; border-radius: 8px; background: #1a5276; color: #fff; font-size: 0.9rem; cursor: pointer; }
-  @media (max-width: 700px) {
-    .fc .fc-toolbar { flex-wrap: wrap; gap: 6px; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    color: var(--ink);
+    background: var(--bg);
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang TC", "Microsoft JhengHei", "Noto Sans TC", sans-serif;
+    letter-spacing: 0;
+  }
+
+  button, input {
+    font: inherit;
+  }
+
+  button {
+    color: inherit;
+    cursor: pointer;
+  }
+
+  .app-shell {
+    width: min(100%, 430px);
+    min-height: 100vh;
+    margin: 0 auto;
+    background: var(--paper);
+    box-shadow: 0 0 0 1px rgba(7, 62, 99, 0.08), var(--shadow);
+    position: relative;
+    overflow: clip;
+  }
+
+  .app-bar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    min-height: 92px;
+    padding: 16px 14px 11px;
+    display: grid;
+    gap: 11px;
+    background: rgba(255, 255, 255, 0.96);
+    color: var(--navy);
+    backdrop-filter: blur(16px);
+  }
+
+  .brand-row {
+    display: grid;
+    grid-template-columns: 32px minmax(0, 1fr) 40px;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .brand-mark {
+    width: 32px;
+    height: 32px;
+    display: grid;
+    place-items: center;
+    color: var(--navy);
+  }
+
+  .app-title {
+    margin: 0;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 1.3rem;
+    line-height: 1.15;
+    font-weight: 900;
+    color: var(--navy);
+  }
+
+  .icon-button {
+    width: 44px;
+    height: 44px;
+    border: 0;
+    border-radius: 8px;
+    display: inline-grid;
+    place-items: center;
+    background: transparent;
+    color: currentColor;
+    position: relative;
+  }
+
+  .brand-row .icon-button {
+    width: 40px;
+    height: 40px;
+    justify-self: end;
+  }
+
+  .icon-button:hover,
+  .icon-button:focus-visible {
+    outline: none;
+    background: #eef6fc;
+  }
+
+  .badge {
+    min-width: 20px;
+    height: 20px;
+    padding: 0 5px;
+    border-radius: 999px;
+    display: inline-grid;
+    place-items: center;
+    background: var(--danger);
+    color: #fff;
+    font-size: 0.76rem;
+    line-height: 1;
+    font-weight: 850;
+  }
+
+  .icon-button .badge {
+    position: absolute;
+    top: 3px;
+    right: 2px;
+    border: 2px solid #fff;
+  }
+
+  main {
+    padding: 0 14px 24px;
+  }
+
+  @media (max-width: 759px) {
+    .app-shell {
+      margin: 0;
+    }
+  }
+
+  .school-row {
+    display: none;
+    min-height: 72px;
+    padding: 18px 0 16px;
+    display: grid;
+    grid-template-columns: 48px 1fr;
+    gap: 12px;
+    align-items: center;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .school-mark {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    display: grid;
+    place-items: center;
+    color: var(--navy);
+    background: #eef7ff;
+    border: 1px solid #bad4e8;
+  }
+
+  .school-title {
+    margin: 0;
+    font-size: 1.22rem;
+    line-height: 1.25;
+    font-weight: 850;
+  }
+
+  .updated {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--muted);
+    font-size: 0.98rem;
+    white-space: nowrap;
+  }
+
+  .updated svg {
+    width: 19px;
+    height: 19px;
+  }
+
+  .hero-date {
+    margin-top: 2px;
+    padding: 18px 16px 11px;
+    border: 1px solid #ccdbe7;
+    border-radius: var(--radius);
+    background:
+      linear-gradient(150deg, rgba(239, 248, 255, 0.95), rgba(255, 255, 255, 0.98) 58%),
+      #fff;
+  }
+
+  .date-line {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    color: var(--navy);
+  }
+
+  .date-icon {
+    flex: 0 0 auto;
+    color: var(--teal);
+  }
+
+  .date-line h2 {
+    margin: 0;
+    font-size: 1.58rem;
+    line-height: 1.08;
+    font-weight: 900;
+    letter-spacing: 0;
+    color: var(--navy);
+  }
+
+  .weekday-pill {
+    flex: 0 0 auto;
+    min-width: 0;
+    height: auto;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    display: inline;
+    background: transparent;
+    color: var(--navy);
+    font-size: 1.58rem;
+    line-height: 1;
+    font-weight: 850;
+    box-shadow: none;
+  }
+
+  .today-summary {
+    margin-top: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--navy);
+    font-size: 1.12rem;
+    line-height: 1.2;
+    font-weight: 700;
+  }
+
+  .today-summary .count {
+    color: var(--teal);
+    font-size: 1.38rem;
+    font-weight: 900;
+  }
+
+  .event-stack {
+    margin-top: 8px;
+    border-top: 0;
+  }
+
+  .event-row {
+    width: 100%;
+    border: 0;
+    border-bottom: 1px solid var(--line);
+    background: transparent;
+    text-align: left;
+    display: grid;
+    grid-template-columns: 66px 5px minmax(0, 1fr) auto;
+    gap: 11px;
+    align-items: center;
+    padding: 12px 0 11px;
+  }
+
+  .event-row:last-child {
+    border-bottom: 0;
+  }
+
+  .event-row:hover,
+  .event-row:focus-visible {
+    outline: none;
+    background: rgba(242, 248, 252, 0.7);
+  }
+
+  .time-rail {
+    color: #111827;
+    font-size: 0.98rem;
+    line-height: 1.22;
+    font-weight: 850;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .time-rail .dash {
+    display: block;
+    height: auto;
+    margin-left: 0;
+    border-left: 0;
+  }
+
+  .dot-line {
+    height: 100%;
+    min-height: 47px;
+    border-radius: 999px;
+    background: var(--event-color);
+  }
+
+  .dot-line::after {
+    display: none;
+  }
+
+  .dot {
+    display: none;
+  }
+
+  .event-main {
+    min-width: 0;
+  }
+
+  .event-title-line {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+  }
+
+  .subject-tag {
+    min-width: 47px;
+    height: 29px;
+    padding: 0 10px;
+    border-radius: 6px;
+    display: inline-grid;
+    place-items: center;
+    background: var(--event-color);
+    color: #fff;
+    font-size: 0.92rem;
+    line-height: 1;
+    font-weight: 850;
+    white-space: nowrap;
+  }
+
+  .event-name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 1.08rem;
+    line-height: 1.22;
+    font-weight: 850;
+  }
+
+  .meta-line {
+    margin-top: 6px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 12px;
+    color: #5b6675;
+    font-size: 0.95rem;
+    line-height: 1.3;
+  }
+
+  .meta-line span {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .meta-line:empty,
+  .event-side:empty,
+  .compact-side:empty {
+    display: none;
+  }
+
+  .chevron {
+    color: var(--muted-2);
+  }
+
+  .event-side,
+  .compact-side {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #2f3746;
+    font-size: 0.88rem;
+    white-space: nowrap;
+  }
+
+  .compact-side {
+    justify-content: end;
+    font-size: 0.88rem;
+  }
+
+  .event-row .chevron {
+    display: none;
+  }
+
+  .section-title {
+    margin: 0;
+    color: var(--navy);
+    font-size: 1.42rem;
+    line-height: 1.2;
+    font-weight: 850;
+  }
+
+  .week-panel {
+    display: none;
+  }
+
+  .agenda-panel {
+    padding-top: 0;
+    margin-top: 24px;
+  }
+
+  .week-strip {
+    margin-top: 11px;
+    display: grid;
+    grid-template-columns: repeat(7, minmax(47px, 1fr));
+    gap: 6px;
+  }
+
+  .day-cell {
+    min-width: 0;
+    min-height: 92px;
+    padding: 8px 4px 7px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: transparent;
+    display: grid;
+    justify-items: center;
+    align-content: start;
+    gap: 5px;
+  }
+
+  .day-cell.active {
+    border-color: var(--blue);
+    background: #f3f9ff;
+    box-shadow: inset 0 0 0 1px rgba(8, 110, 215, 0.1);
+  }
+
+  .day-cell:hover,
+  .day-cell:focus-visible {
+    outline: none;
+    border-color: #7fb7ed;
+    background: #f6fbff;
+  }
+
+  .day-week {
+    color: #5d6570;
+    font-size: 0.98rem;
+    line-height: 1;
+    font-weight: 760;
+  }
+
+  .day-date {
+    color: #313846;
+    font-size: 0.86rem;
+    line-height: 1;
+  }
+
+  .day-count {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: var(--day-color);
+    color: #fff;
+    font-size: 1.05rem;
+    font-weight: 850;
+  }
+
+  .day-dots {
+    min-height: 8px;
+    display: flex;
+    gap: 4px;
+  }
+
+  .mini-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--dot-color);
+  }
+
+  .agenda-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .filter-button {
+    height: 38px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: transparent;
+    color: var(--navy);
+    font-size: 1rem;
+    font-weight: 850;
+  }
+
+  .filter-button:hover,
+  .filter-button:focus-visible {
+    outline: none;
+    background: #eef7ff;
+  }
+
+  .chip-row {
+    margin-top: 16px;
+    display: flex;
+    gap: 9px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+  }
+
+  .chip-row::-webkit-scrollbar { display: none; }
+
+  .chip {
+    flex: 0 0 auto;
+    height: 39px;
+    padding: 0 15px;
+    border: 1px solid var(--navy);
+    border-radius: 999px;
+    background: #fff;
+    color: var(--navy);
+    font-size: 0.98rem;
+    font-weight: 760;
+    white-space: nowrap;
+  }
+
+  .chip.on {
+    border-color: transparent;
+    background: linear-gradient(135deg, #0d8fb2, #0873d5);
+    color: #fff;
+    box-shadow: 0 9px 18px rgba(8, 110, 215, 0.18);
+  }
+
+  .mini-action-row {
+    display: none;
+    margin-top: 12px;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+  }
+
+  .mini-action-row::-webkit-scrollbar { display: none; }
+
+  .mini-action {
+    flex: 0 0 auto;
+    min-height: 36px;
+    padding: 0 12px;
+    border: 1px solid color-mix(in srgb, var(--action-color) 45%, #d7e3ec);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--action-color) 8%, #fff);
+    color: var(--action-color);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.92rem;
+    font-weight: 850;
+    white-space: nowrap;
+  }
+
+  .mini-action .badge {
+    display: none;
+  }
+
+  .search-row {
+    display: none;
+    margin-top: 12px;
+    height: 42px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #f8fbfd;
+    grid-template-columns: 38px 1fr 38px;
+    align-items: center;
+    color: var(--muted);
+  }
+
+  .search-row input {
+    width: 100%;
+    min-width: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--ink);
+    font-size: 0.96rem;
+  }
+
+  .clear-search {
+    border: 0;
+    background: transparent;
+    color: var(--muted);
+    display: none;
+  }
+
+  .clear-search.show {
+    display: grid;
+    place-items: center;
+  }
+
+  .agenda-list {
+    margin-top: 22px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--paper);
+  }
+
+  .date-group + .date-group {
+    border-top: 1px solid var(--line);
+  }
+
+  .date-group-head {
+    min-height: 40px;
+    padding: 8px 13px 8px 14px;
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    align-items: center;
+    background: linear-gradient(180deg, #fbfdff, #f3f7fa);
+    color: var(--navy);
+    font-size: 1.08rem;
+    font-weight: 850;
+  }
+
+  .date-group-count {
+    color: var(--muted);
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 0.9rem;
+    font-weight: 700;
+  }
+
+  .compact-event {
+    width: 100%;
+    min-height: 62px;
+    padding: 10px 10px 10px 12px;
+    border: 0;
+    border-top: 1px solid #edf2f6;
+    background: #fff;
+    display: grid;
+    grid-template-columns: 5px 84px minmax(0, 1fr) auto;
+    gap: 9px;
+    align-items: center;
+    text-align: left;
+  }
+
+  .compact-event:first-of-type {
+    border-top: 0;
+  }
+
+  .compact-event:hover,
+  .compact-event:focus-visible {
+    outline: none;
+    background: #f7fbff;
+  }
+
+  .color-bar {
+    width: 5px;
+    height: 42px;
+    border-radius: 999px;
+    background: var(--event-color);
+  }
+
+  .compact-time {
+    color: #1f2937;
+    font-size: 0.96rem;
+    line-height: 1.2;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .compact-title {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+  }
+
+  .compact-title strong {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 1.06rem;
+    line-height: 1.18;
+    font-weight: 850;
+  }
+
+  .small-tag {
+    min-width: 45px;
+    height: 28px;
+    padding: 0 8px;
+    border-radius: 5px;
+    display: inline-grid;
+    place-items: center;
+    background: var(--event-color);
+    color: #fff;
+    font-size: 0.9rem;
+    font-weight: 850;
+    white-space: nowrap;
+  }
+
+  .compact-detail {
+    margin-top: 4px;
+    color: var(--muted);
+    font-size: 0.92rem;
+    line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .empty-state {
+    padding: 24px 18px;
+    text-align: center;
+    color: var(--muted);
+    line-height: 1.45;
+  }
+
+  .recent-panel {
+    margin-top: 26px;
+  }
+
+  .recent-list {
+    margin-top: 8px;
+  }
+
+  .recent-item {
+    width: 100%;
+    min-height: 50px;
+    padding: 10px 8px;
+    border: 0;
+    border-bottom: 1px solid #edf2f6;
+    background: transparent;
+    display: grid;
+    grid-template-columns: 30px 1fr auto 20px;
+    gap: 8px;
+    align-items: center;
+    text-align: left;
+  }
+
+  .recent-item:hover,
+  .recent-item:focus-visible {
+    outline: none;
+    background: #f7fbff;
+  }
+
+  .recent-kind {
+    color: var(--event-color);
+    display: grid;
+    place-items: center;
+  }
+
+  .recent-text {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 1.02rem;
+    font-weight: 720;
+  }
+
+  .recent-date {
+    color: var(--muted);
+    font-size: 0.95rem;
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  .recent-item.cancel-event {
+    background: #fff2f3;
+    box-shadow: inset 3px 0 0 var(--danger);
+    border-radius: 0 8px 8px 0;
+  }
+
+  .event-row.cancel-event,
+  .compact-event.cancel-event {
+    background: #fff2f3;
+  }
+
+  .event-row.cancel-event:hover,
+  .event-row.cancel-event:focus-visible,
+  .compact-event.cancel-event:hover,
+  .compact-event.cancel-event:focus-visible,
+  .recent-item.cancel-event:hover,
+  .recent-item.cancel-event:focus-visible {
+    background: #ffe9ec;
+  }
+
+  .cancel-event .event-name,
+  .cancel-event .compact-title strong,
+  .cancel-event .recent-text {
+    color: #b80012;
+  }
+
+  .drawer,
+  .sheet,
+  .modal {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: none;
+  }
+
+  .drawer.show,
+  .sheet.show,
+  .modal.show {
+    display: block;
+  }
+
+  .scrim {
+    position: absolute;
+    inset: 0;
+    border: 0;
+    background: rgba(13, 29, 45, 0.42);
+  }
+
+  .drawer-panel {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: min(82vw, 340px);
+    padding: 18px;
+    background: #fff;
+    box-shadow: 16px 0 38px rgba(7, 42, 68, 0.18);
+  }
+
+  .panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .panel-title {
+    margin: 0;
+    color: var(--navy);
+    font-size: 1.16rem;
+    font-weight: 850;
+  }
+
+  .drawer-link {
+    width: 100%;
+    min-height: 48px;
+    margin-top: 8px;
+    padding: 0 8px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-align: left;
+    font-weight: 760;
+  }
+
+  .drawer-link .badge {
+    margin-left: auto;
+  }
+
+  .drawer-link:hover,
+  .drawer-link:focus-visible {
+    outline: none;
+    background: #f0f7fc;
+  }
+
+  .drawer-note {
+    margin: 18px 0 0;
+    padding: 12px;
+    border-radius: 8px;
+    background: #f5f9fc;
+    color: var(--muted);
+    font-size: 0.95rem;
+    line-height: 1.45;
+  }
+
+  .sheet-panel {
+    position: absolute;
+    inset: auto 0 0;
+    max-height: min(86vh, 650px);
+    padding: 16px 16px calc(18px + var(--safe-bottom));
+    overflow: auto;
+    background: #fff;
+    border-radius: 8px 8px 0 0;
+    box-shadow: 0 -16px 38px rgba(7, 42, 68, 0.18);
+  }
+
+  .selector-grid {
+    margin-top: 12px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .selector {
+    min-height: 40px;
+    padding: 8px 9px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #fff;
+    font-weight: 740;
+  }
+
+  .selector.on {
+    border-color: var(--blue);
+    background: #eef7ff;
+    color: var(--blue);
+    box-shadow: inset 0 0 0 1px rgba(8, 110, 215, 0.16);
+  }
+
+  .sheet-actions {
+    margin-top: 16px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .primary-button,
+  .secondary-button {
+    min-height: 44px;
+    border-radius: 8px;
+    font-weight: 850;
+  }
+
+  .primary-button {
+    border: 0;
+    background: var(--blue);
+    color: #fff;
+  }
+
+  .secondary-button {
+    border: 1px solid var(--line);
+    background: #fff;
+    color: var(--navy);
+  }
+
+  .modal-panel {
+    position: absolute;
+    inset: auto 12px 14px;
+    max-width: 456px;
+    margin: 0 auto;
+    padding: 16px;
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: 0 -12px 40px rgba(7, 42, 68, 0.22);
+  }
+
+  .modal-panel .subject-tag {
+    min-width: auto;
+    display: inline-grid;
+  }
+
+  .modal-title {
+    margin: 12px 0 6px;
+    font-size: 1.3rem;
+    line-height: 1.25;
+    font-weight: 900;
+  }
+
+  .modal-time {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--muted);
+    font-size: 1rem;
+  }
+
+  .detail-box {
+    margin-top: 12px;
+    padding: 12px;
+    border-radius: 8px;
+    background: #f6f9fc;
+    color: #334155;
+    white-space: pre-wrap;
+    line-height: 1.55;
+  }
+
+  .modal-actions {
+    margin-top: 14px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 9px;
+  }
+
+  .tt-sub {
+    margin: 10px 0 0;
+    color: var(--muted);
+    font-size: 0.95rem;
+  }
+
+  .tt-note {
+    margin: 12px 0 0;
+    padding: 10px 12px;
+    border-left: 4px solid #f9a825;
+    border-radius: 8px;
+    background: #fff8e1;
+    color: #4d3f12;
+    font-size: 0.95rem;
+    line-height: 1.55;
+  }
+
+  .tt-day {
+    margin-top: 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .tt-day-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: #eef3f8;
+    color: var(--navy);
+    font-size: 1.02rem;
+    font-weight: 850;
+  }
+
+  .tt-day.weekend .tt-day-head {
+    background: #fdf2e3;
+    color: #b9770e;
+  }
+
+  .tt-row {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 9px 12px;
+    border-top: 1px dashed #e7edf2;
+    font-size: 1rem;
+  }
+
+  .tt-time {
+    flex: 0 0 auto;
+    min-width: 96px;
+    color: var(--muted);
+    font-size: 0.94rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .tt-subj {
+    flex: 0 0 auto;
+    padding: 2px 9px;
+    border-radius: 6px;
+    color: #fff;
+    font-size: 0.88rem;
+    font-weight: 800;
+  }
+
+  .view-switch {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border: 1px solid var(--navy);
+    border-radius: 999px;
+    overflow: hidden;
+    background: #fff;
+  }
+
+  .view-tab {
+    min-height: 38px;
+    border: 0;
+    background: transparent;
+    color: var(--navy);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-size: 1rem;
+    font-weight: 800;
+  }
+
+  .view-tab.on {
+    background: var(--navy);
+    color: #fff;
+  }
+
+  .month-panel {
+    margin-top: 6px;
+  }
+
+  .month-nav {
+    display: grid;
+    grid-template-columns: 44px 1fr 44px;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .month-nav h2 {
+    margin: 0;
+    text-align: center;
+    color: var(--navy);
+    font-size: 1.34rem;
+    font-weight: 900;
+  }
+
+  .month-nav .icon-button:disabled {
+    opacity: 0.3;
+  }
+
+  .month-hint {
+    margin: 10px 0 0;
+    padding: 9px 12px;
+    border-left: 4px solid #f28c00;
+    border-radius: 8px;
+    background: #fff6ea;
+    color: #5d431a;
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+
+  .month-grid {
+    margin-top: 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+    background: #fff;
+  }
+
+  .m-weekhead {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    padding: 7px 0;
+    background: linear-gradient(180deg, #fbfdff, #f3f7fa);
+    color: var(--navy);
+    font-size: 0.92rem;
+    font-weight: 800;
+    text-align: center;
+  }
+
+  .m-week {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    grid-auto-flow: row dense;
+    border-top: 1px solid #e8eef3;
+    padding-bottom: 5px;
+  }
+
+  .m-cell {
+    grid-row: 1;
+    min-height: 60px;
+    padding: 5px 1px 2px;
+    border: 0;
+    border-left: 1px solid #f0f4f7;
+    background: transparent;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+  }
+
+  .m-cell:first-child {
+    border-left: 0;
+  }
+
+  .m-date {
+    width: 27px;
+    height: 27px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    color: #313846;
+    font-size: 0.98rem;
+    font-weight: 750;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .m-cell.today .m-date {
+    background: var(--blue);
+    color: #fff;
+    font-weight: 850;
+  }
+
+  .m-cell.closed {
+    background: #fff2f3;
+  }
+
+  .m-cell.closed .m-date {
+    color: #b80012;
+    font-weight: 850;
+  }
+
+  .m-chip {
+    max-width: 100%;
+    padding: 1px 5px;
+    border-radius: 5px;
+    background: var(--chip-color);
+    color: #fff;
+    font-size: 0.78rem;
+    line-height: 1.45;
+    font-weight: 800;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .m-more {
+    color: var(--muted);
+    font-size: 0.78rem;
+    font-weight: 700;
+  }
+
+  .m-bar {
+    height: 22px;
+    margin: 3px 3px 0;
+    padding: 0 7px;
+    border: 0;
+    border-radius: 6px;
+    background: var(--bar-color);
+    color: #fff;
+    font-size: 0.8rem;
+    line-height: 22px;
+    font-weight: 800;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .month-legend {
+    margin-top: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+    color: var(--muted);
+    font-size: 0.92rem;
+  }
+
+  .month-legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .month-legend i {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 4px;
+    background: var(--lg-color);
+  }
+
+  .month-legend i.closed-sample {
+    background: #fff2f3;
+    border: 1px solid var(--danger);
+  }
+
+  .toast {
+    position: fixed;
+    z-index: 80;
+    left: 50%;
+    bottom: calc(18px + var(--safe-bottom));
+    transform: translateX(-50%) translateY(20px);
+    max-width: min(88vw, 360px);
+    padding: 10px 14px;
+    border-radius: 8px;
+    background: #102338;
+    color: #fff;
+    font-weight: 760;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 160ms ease, transform 160ms ease;
+  }
+
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  .hidden {
+    display: none !important;
+  }
+
+  @media (max-width: 390px) {
+    main { padding-inline: 12px; }
+    .app-bar { padding: 22px 15px 16px; }
+    .app-title { font-size: 1.24rem; }
+    .brand-row { grid-template-columns: 32px minmax(0, 1fr) 42px; gap: 7px; }
+    .hero-date { padding-inline: 18px; }
+    .date-line h2,
+    .weekday-pill { font-size: 1.52rem; }
+    .event-row { grid-template-columns: 62px 5px minmax(0, 1fr); gap: 10px; }
+    .event-side { display: none; }
+    .time-rail { font-size: 0.98rem; }
+    .event-name { font-size: 1.06rem; }
+    .subject-tag { min-width: 48px; height: 29px; font-size: 0.92rem; }
+    .compact-event { grid-template-columns: 5px 78px minmax(0, 1fr); gap: 9px; }
+    .compact-side { display: none; }
+    .compact-time { font-size: 0.94rem; }
+  }
+
+  @media (min-width: 760px) {
+    body { padding: 22px 0; }
+    .app-shell {
+      border-radius: 8px;
+      min-height: calc(100vh - 44px);
+    }
+    .app-bar {
+      border-radius: 8px 8px 0 0;
+    }
+    .drawer,
+    .sheet,
+    .modal {
+      position: absolute;
+    }
   }
 </style>
 </head>
 <body>
-<header style="position:relative">
-  <a href="print.html" style="color:#fff;font-size:0.78rem;position:absolute;top:14px;right:16px">🖨 紙本進度表</a>
-  <a href="#" id="ttBtn" style="color:#fff;font-size:0.78rem;position:absolute;top:14px;right:120px">📋 課表</a>
-  <h1 id="siteTitle" style="padding-right:180px">班級行事曆</h1>
-  <div class="updated" id="updated"></div>
-</header>
-<div class="filters" id="typeFilters"></div>
-<div class="legend" id="legend"></div>
-<div id="calendar"></div>
-
-<div id="overlay">
-  <div id="modal">
-    <span class="tag" id="mTag"></span>
-    <h2 id="mTitle"></h2>
-    <div class="when" id="mWhen"></div>
-    <div class="body" id="mBody"></div>
-    <button onclick="document.getElementById('overlay').classList.remove('show')">關閉</button>
-  </div>
-</div>
-
-<div id="ttOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.45);display:none;align-items:center;justify-content:center;z-index:99;padding:20px">
-  <div id="ttModal">
-    <div class="tt-head">
-      <h2>📋 每週固定課表</h2>
-      <div class="tt-sub" id="ttSub"></div>
+<div class="app-shell" id="app">
+  <header class="app-bar">
+    <div class="brand-row">
+      <div class="brand-mark"><i data-lucide="calendar-days" size="32"></i></div>
+      <h1 class="app-title" id="siteTitle">高名文理補習班 國三班行事曆</h1>
+      <button class="icon-button" type="button" data-action="open-menu" aria-label="開啟選單">
+        <i data-lucide="menu" size="34"></i>
+      </button>
     </div>
-    <div id="ttBody">載入中…</div>
-    <button class="tt-close" onclick="document.getElementById('ttOverlay').style.display='none'">關閉</button>
+    <div class="updated"><i data-lucide="clock-3" size="21"></i><span id="updatedText">載入中</span></div>
+    <div class="view-switch" role="tablist" aria-label="切換顯示模式">
+      <button class="view-tab on" type="button" role="tab" id="tabList" aria-selected="true" data-action="set-view" data-view="list"><i data-lucide="list" size="18"></i>列表</button>
+      <button class="view-tab" type="button" role="tab" id="tabMonth" aria-selected="false" data-action="set-view" data-view="month"><i data-lucide="calendar" size="18"></i>月曆</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero-date" id="todayPanel" aria-label="今日行程">
+      <div class="date-line">
+        <i class="date-icon" data-lucide="calendar-days" size="31"></i>
+        <h2 id="selectedDateTitle">--</h2>
+        <button class="weekday-pill" type="button" data-action="jump-today" id="weekdayPill">--</button>
+      </div>
+      <div class="today-summary">
+        <i data-lucide="calendar-days"></i>
+        <span id="selectedDayLabel">今天</span>
+        <span class="count" id="selectedDayCount">0</span>
+        <span>個行程</span>
+      </div>
+      <div class="event-stack" id="todayEvents"></div>
+    </section>
+
+    <section class="week-panel" id="weekPanel" aria-label="本週速覽">
+      <h2 class="section-title">本週速覽</h2>
+      <div class="week-strip" id="weekStrip"></div>
+    </section>
+
+    <section class="recent-panel" id="recentPanel" aria-label="重要提醒">
+      <div class="agenda-header">
+        <h2 class="section-title">重要提醒</h2>
+        <button class="filter-button" type="button" data-action="open-notices">查看全部 <i data-lucide="chevron-right" size="19"></i></button>
+      </div>
+      <div class="recent-list" id="recentList"></div>
+    </section>
+
+    <section class="agenda-panel" id="agendaPanel" aria-label="接下來">
+      <div class="agenda-header">
+        <h2 class="section-title">本週行程</h2>
+        <button class="filter-button" type="button" data-action="open-filters"><i data-lucide="sliders-horizontal"></i>篩選</button>
+      </div>
+      <div class="mini-action-row" id="quickActions" aria-label="快速切換"></div>
+      <div class="search-row-wrap" id="searchWrap">
+        <label class="search-row" for="searchInput">
+          <span style="display:grid;place-items:center"><i data-lucide="search" size="19"></i></span>
+          <input id="searchInput" type="search" placeholder="搜尋科目、範圍或行程">
+          <button class="clear-search" id="clearSearch" type="button" data-action="clear-search" aria-label="清除搜尋"><i data-lucide="x" size="18"></i></button>
+        </label>
+      </div>
+      <div class="chip-row" id="typeChips"></div>
+      <div class="agenda-list" id="agendaList"></div>
+    </section>
+
+    <section class="month-panel hidden" id="monthPanel" aria-label="月曆總覽">
+      <div class="month-nav">
+        <button class="icon-button" type="button" id="monthPrev" data-action="month-prev" aria-label="上個月"><i data-lucide="chevron-left" size="26"></i></button>
+        <h2 id="monthTitle">--</h2>
+        <button class="icon-button" type="button" id="monthNext" data-action="month-next" aria-label="下個月"><i data-lucide="chevron-right" size="26"></i></button>
+      </div>
+      <p class="month-hint hidden" id="monthHint"></p>
+      <div class="month-grid">
+        <div class="m-weekhead"><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span></div>
+        <div id="monthWeeks"></div>
+      </div>
+      <div class="month-legend" aria-label="圖例">
+        <span><i style="--lg-color:#ef3340"></i>高名模考</span>
+        <span><i style="--lg-color:#f28c00"></i>暑訓模考（僅暑訓學生）</span>
+        <span><i class="closed-sample"></i>停課</span>
+        <span><i style="--lg-color:#0b75d1"></i>備註</span>
+        <span><i style="--lg-color:#7c43c6"></i>重要日程</span>
+      </div>
+    </section>
+  </main>
+
+  <div class="drawer" id="menuDrawer" aria-hidden="true">
+    <button class="scrim" type="button" data-action="close-panels" aria-label="關閉"></button>
+    <aside class="drawer-panel" aria-label="選單">
+      <div class="panel-head">
+        <h2 class="panel-title">國三班行事曆</h2>
+        <button class="icon-button" type="button" data-action="close-panels" aria-label="關閉選單"><i data-lucide="x"></i></button>
+      </div>
+      <button class="drawer-link" type="button" data-action="nav-today"><i data-lucide="home"></i>今日行程</button>
+      <button class="drawer-link" type="button" data-action="nav-calendar"><i data-lucide="calendar-range"></i>本週行程</button>
+      <button class="drawer-link" type="button" data-action="quick-mock"><i data-lucide="file-check-2"></i>模考與複習</button>
+      <button class="drawer-link" type="button" data-action="show-notes"><i data-lucide="megaphone"></i>停課與備註</button>
+      <button class="drawer-link" type="button" data-action="open-timetable"><i data-lucide="clipboard-list"></i>每週課表</button>
+      <button class="drawer-link" type="button" data-action="open-notices"><i data-lucide="bell"></i>重要通知 <span class="badge" id="noticeBadge">0</span></button>
+      <a class="drawer-link" href="print.html" style="text-decoration:none;color:inherit"><i data-lucide="printer"></i>紙本進度表</a>
+      <p class="drawer-note" id="drawerNote">載入中…</p>
+    </aside>
   </div>
+
+  <div class="sheet" id="filterSheet" aria-hidden="true">
+    <button class="scrim" type="button" data-action="close-panels" aria-label="關閉"></button>
+    <section class="sheet-panel" aria-label="篩選行程">
+      <div class="panel-head">
+        <h2 class="panel-title">篩選行程</h2>
+        <button class="icon-button" type="button" data-action="close-panels" aria-label="關閉篩選"><i data-lucide="x"></i></button>
+      </div>
+      <h3 class="section-title" style="font-size:1rem;margin-top:16px">類型</h3>
+      <div class="selector-grid" id="sheetTypeSelectors"></div>
+      <h3 class="section-title" style="font-size:1rem;margin-top:16px">科目</h3>
+      <div class="selector-grid" id="sheetSubjectSelectors"></div>
+      <div class="sheet-actions">
+        <button class="secondary-button" type="button" data-action="reset-filters"><i data-lucide="rotate-ccw" size="17"></i> 清除</button>
+        <button class="primary-button" type="button" data-action="close-panels"><i data-lucide="check" size="17"></i> 套用</button>
+      </div>
+    </section>
+  </div>
+
+  <div class="sheet" id="noticeSheet" aria-hidden="true">
+    <button class="scrim" type="button" data-action="close-panels" aria-label="關閉"></button>
+    <section class="sheet-panel" aria-label="通知">
+      <div class="panel-head">
+        <h2 class="panel-title">通知與近期重點</h2>
+        <button class="icon-button" type="button" data-action="close-panels" aria-label="關閉通知"><i data-lucide="x"></i></button>
+      </div>
+      <div class="recent-list" id="noticeList"></div>
+    </section>
+  </div>
+
+  <div class="sheet" id="timetableSheet" aria-hidden="true">
+    <button class="scrim" type="button" data-action="close-panels" aria-label="關閉"></button>
+    <section class="sheet-panel" aria-label="每週課表">
+      <div class="panel-head">
+        <h2 class="panel-title">📋 每週固定課表</h2>
+        <button class="icon-button" type="button" data-action="close-panels" aria-label="關閉課表"><i data-lucide="x"></i></button>
+      </div>
+      <p class="tt-sub" id="ttSub"></p>
+      <div id="ttBody">載入中…</div>
+    </section>
+  </div>
+
+  <div class="modal" id="eventModal" aria-hidden="true">
+    <button class="scrim" type="button" data-action="close-panels" aria-label="關閉"></button>
+    <section class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="panel-head">
+        <span class="subject-tag" id="modalTag">行程</span>
+        <button class="icon-button" type="button" data-action="close-panels" aria-label="關閉詳情"><i data-lucide="x"></i></button>
+      </div>
+      <h2 class="modal-title" id="modalTitle"></h2>
+      <div class="modal-time" id="modalTime"><i data-lucide="clock-3" size="18"></i><span></span></div>
+      <div class="detail-box" id="modalDetail"></div>
+      <div class="modal-actions">
+        <button class="secondary-button" type="button" data-action="copy-event"><i data-lucide="copy" size="17"></i> 複製資訊</button>
+      </div>
+    </section>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </div>
 
 <script>
-// 顯示層科目歸併：資料保留細科名稱，畫面標籤與圖例統一為「自然」「社會」
-const SUBJECT_GROUPS = { "理化": "自然", "生物": "自然", "歷史": "社會", "地理": "社會", "公民與社會": "社會" };
-const groupSubject = (s) => SUBJECT_GROUPS[s] || s;
 const SUBJECT_COLORS = {
-  "國文": "#c0392b", "英文": "#2980b9", "數學": "#8e44ad",
-  "自然": "#229954", "社會": "#e67e22", "國文/社會": "#795548",
+  "國文": "#ef3340",
+  "英文": "#086ed7",
+  "數學": "#1768d8",
+  "自然": "#21a667",
+  "社會": "#d66a00",
+  "國文/社會": "#815034",
 };
-const TYPE_COLORS = { "停課": "#9e9e9e", "備註": "#f9a825", "高名模考": "#d32f2f", "重要日程": "#5e35b1" };
-const TYPES = ["全部", "暑訓", "模考與複習", "停課與備註"];
-let activeType = "全部";
-let allEvents = [];
-let calendar;
 
-function colorOf(e) {
-  if (e.type === "停課" || e.type === "備註" || e.type === "重要日程") return TYPE_COLORS[e.type];
-  return SUBJECT_COLORS[groupSubject(e.subject)] || TYPE_COLORS[e.type] || "#607d8b";
-}
-function matchType(e) {
-  if (activeType === "全部") return true;
-  if (activeType === "模考與複習") return e.type === "複習卷" || e.type === "高名模考";
-  if (activeType === "停課與備註") return e.type === "停課" || e.type === "備註" || e.type === "重要日程";
-  return e.type === activeType;
-}
-// 行事曆格子顯示精簡標題（去掉結尾括號的範圍說明），完整標題留在詳情彈窗
-const shortTitle = (e) => {
-  const title = e.title.replace(/（[^（）]+）$/, "");
-  return e.subject ? title.replace(e.subject, groupSubject(e.subject)) : title;
+const TYPE_COLORS = {
+  "正課": "#086ed7",
+  "測驗": "#0986a7",
+  "暑訓": "#f28c00",
+  "模考與複習": "#ef3340",
+  "重要提醒": "#7c43c6",
+  "停課": "#ef3340",
+  "備註": "#0b75d1",
 };
-const typeLabel = (type) => {
-  if (type === "複習卷" || type === "高名模考") return "模考與複習";
-  if (type === "重要日程") return "停課與備註";
-  return type;
+
+const SUBJECT_GROUPS = {
+  "理化": "自然",
+  "生物": "自然",
+  "歷史": "社會",
+  "地理": "社會",
+  "公民與社會": "社會",
 };
-function toFC(e) {
-  return {
-    title: shortTitle(e), start: e.start, end: e.end, allDay: !!e.allDay,
-    backgroundColor: colorOf(e), borderColor: colorOf(e),
-    classNames: ["type-" + e.type],
-    extendedProps: { type: e.type, subject: e.subject, detail: e.detail, fullTitle: e.title },
-  };
-}
-function refresh() {
-  calendar.removeAllEvents();
-  allEvents.filter(matchType).map(toFC).forEach((e) => calendar.addEvent(e));
-}
+const MOCK_TYPES = ["高名模考", "模考"];
+const REVIEW_TYPES = ["複習卷"];
+const NOTICE_TYPES = ["停課", "備註", "重要日程"];
+const TYPE_OPTIONS = ["全部", "正課", "測驗", "暑訓", "模考與複習", "停課與備註"];
+const QUICK_ITEMS = [
+  { key: "mock", label: "模考與複習", icon: "file-check-2", color: "#ef3340" },
+  { key: "notice", label: "停課", icon: "megaphone", color: "#f37014" },
+  { key: "note", label: "備註", icon: "notebook-pen", color: "#6c737d" },
+];
+
+const WEEKDAY_LABELS = ["日", "一", "二", "三", "四", "五", "六"];
+const state = {
+  data: null,
+  events: [],
+  selectedDate: "",
+  defaultDate: "",
+  activeType: "全部",
+  activeSubjects: new Set(),
+  search: "",
+  activeEventId: null,
+  nav: "today",
+  view: "list",
+  monthCursor: "",
+};
+
+const el = (id) => document.getElementById(id);
 
 fetch("events.json?v=" + Date.now())
-  .then((r) => r.json())
-  .then((data) => {
-    document.getElementById("siteTitle").textContent = data.site_title;
-    document.title = data.site_title;
-    document.getElementById("updated").textContent = "最後更新：" + data.generated_at;
-    allEvents = data.events;
-    renderTimetable(data);
-
-    // 類型篩選按鈕
-    const tf = document.getElementById("typeFilters");
-    TYPES.forEach((t) => {
-      const b = document.createElement("span");
-      b.className = "chip" + (t === activeType ? " on" : "");
-      b.textContent = t;
-      b.onclick = () => {
-        activeType = t;
-        tf.querySelectorAll(".chip").forEach((c) => c.classList.toggle("on", c.textContent === t));
-        refresh();
-      };
-      tf.appendChild(b);
-    });
-
-    // 科目圖例
-    const lg = document.getElementById("legend");
-    Object.entries(SUBJECT_COLORS).forEach(([s, c]) => {
-      if (!allEvents.some((e) => groupSubject(e.subject) === s)) return;
-      const sp = document.createElement("span");
-      sp.style.setProperty("--c", c);
-      sp.textContent = s;
-      lg.appendChild(sp);
-    });
-
-    const isMobile = window.innerWidth < 700;
-    const today = new Date().toISOString().slice(0, 10);
-    calendar = new FullCalendar.Calendar(document.getElementById("calendar"), {
-      locale: "zh-tw",
-      initialView: isMobile ? "listMonth" : "dayGridMonth",
-      initialDate: today >= data.range.start && today <= data.range.end ? today : data.range.start,
-      validRange: { start: data.range.start, end: addDays(data.range.end, 1) },
-      headerToolbar: { left: "prev,next today", center: "title", right: "dayGridMonth,listWeek,listMonth" },
-      buttonText: { today: "今天", dayGridMonth: "月", listWeek: "週", listMonth: "清單" },
-      allDayText: "全天",
-      views: { dayGridMonth: { displayEventTime: false } },
-      height: "auto",
-      dayMaxEventRows: 4,
-      eventDisplay: "block",
-      displayEventEnd: true,
-      eventTimeFormat: { hour: "2-digit", minute: "2-digit", hour12: false },
-      noEventsContent: "這段期間沒有符合的行程",
-      eventClick: (info) => {
-        const p = info.event.extendedProps;
-        document.getElementById("mTitle").textContent = p.fullTitle || info.event.title;
-        const tag = document.getElementById("mTag");
-        tag.textContent = typeLabel(p.type);
-        tag.style.background = info.event.backgroundColor;
-        document.getElementById("mWhen").textContent = fmtRange(info.event);
-        document.getElementById("mBody").textContent = p.detail || "（無其他說明）";
-        document.getElementById("overlay").classList.add("show");
-      },
-    });
-    refresh();
-    calendar.render();
+  .then((response) => {
+    if (!response.ok) throw new Error("events.json load failed");
+    return response.json();
   })
-  .catch((err) => {
-    document.getElementById("calendar").innerHTML =
-      '<p style="text-align:center;color:#c0392b">行事曆資料載入失敗，請重新整理。</p>';
-    console.error(err);
+  .then((data) => {
+    state.data = data;
+    state.events = data.events.map(normalizeEvent);
+    state.defaultDate = chooseDefaultDate(data);
+    state.selectedDate = state.defaultDate;
+    hydrateStatic(data);
+    render();
+  })
+  .catch((error) => {
+    el("todayEvents").innerHTML = '<div class="empty-state">行事曆資料載入失敗，請重新整理後再試。</div>';
+    console.error(error);
   });
 
-function addDays(iso, n) {
-  const d = new Date(iso + "T00:00:00Z");
-  d.setUTCDate(d.getUTCDate() + n);
-  return d.toISOString().slice(0, 10);
+function hydrateStatic(data) {
+  el("siteTitle").textContent = data.site_title;
+  document.title = data.site_title;
+  el("updatedText").textContent = data.generated_at + " 更新";
+  el("drawerNote").textContent = "資料區間：" + formatShortDate(data.range.start) + " - " + formatShortDate(data.range.end) + "。實際考程以本行事曆為準，停課日當天課程全部暫停。";
+  renderTimetable(data);
 }
-function fmtRange(ev) {
-  const opts = { month: "long", day: "numeric", weekday: "short" };
-  const ds = ev.start.toLocaleDateString("zh-TW", opts);
-  if (ev.allDay) {
-    if (ev.end) {
-      const endIncl = new Date(ev.end.getTime() - 86400000);
-      if (endIncl > ev.start) return ds + " ～ " + endIncl.toLocaleDateString("zh-TW", opts);
-    }
-    return ds + "（全天）";
-  }
-  const t = (d) => d.toLocaleTimeString("zh-TW", { hour: "2-digit", minute: "2-digit", hour12: false });
-  return ds + "　" + t(ev.start) + " ～ " + (ev.end ? t(ev.end) : "");
-}
-document.getElementById("overlay").addEventListener("click", (e) => {
-  if (e.target.id === "overlay") e.target.classList.remove("show");
-});
 
-// ---- 課表視窗 ----
 function renderTimetable(data) {
-  document.getElementById("ttSub").textContent = "自 " + data.range.start.replaceAll("-", "/") + " 起適用・每週循環";
-  const body = document.getElementById("ttBody");
+  el("ttSub").textContent = "自 " + formatShortDate(data.range.start) + " 起適用，每週循環";
   let html = "";
   if (data.summer_info) {
     const si = data.summer_info;
-    const md = (iso) => Number(iso.slice(5, 7)) + "/" + Number(iso.slice(8, 10));
-    html += `<div class="tt-note">☀️ <b>暑訓</b>（僅參加的學生）：${md(si.start)}～${md(si.end)}，${si.time}`;
-    if (si.mock_week_start) html += `<br>暑訓模考週：${md(si.mock_week_start)} 起一週，${si.mock_time}`;
+    html += `<div class="tt-note">☀️ <b>暑訓</b>（僅參加的學生）：${formatMonthDay(si.start)}～${formatMonthDay(si.end)}，${escapeHTML(si.time)}`;
+    if (si.mock_week_start) html += `<br>暑訓模考週：${formatMonthDay(si.mock_week_start)} 起一週，${escapeHTML(si.mock_time)}`;
     html += `</div>`;
   }
   const order = ["一", "二", "三", "四", "五", "六", "日"];
   order.forEach((wd) => {
-    const rows = (data.timetable || []).filter((r) => r.weekday === wd);
+    const rows = (data.timetable || []).filter((row) => row.weekday === wd);
     if (!rows.length) return;
     const weekend = wd === "六" || wd === "日";
-    html += `<div class="tt-day${weekend ? " weekend" : ""}"><div class="tt-day-head"><span class="badge">${wd}</span>週${wd}</div>` +
-      rows.map((r) => {
-        const chip = r.subject
-          ? `<span class="tt-subj" style="background:${SUBJECT_COLORS[groupSubject(r.subject)] || "#607d8b"}">${groupSubject(r.subject)}</span>`
+    html += `<section class="tt-day${weekend ? " weekend" : ""}"><div class="tt-day-head">週${wd}</div>` +
+      rows.map((row) => {
+        const chip = row.subject
+          ? `<span class="tt-subj" style="background:${SUBJECT_COLORS[groupSubject(row.subject)] || "#607d8b"}">${escapeHTML(groupSubject(row.subject))}</span>`
           : "";
-        return `<div class="tt-row"><span class="tt-time">${r.start_time}–${r.end_time}</span>${chip}<span>${r.activity}</span></div>`;
-      }).join("") + `</div>`;
+        return `<div class="tt-row"><span class="tt-time">${escapeHTML(row.start_time)}–${escapeHTML(row.end_time)}</span>${chip}<span>${escapeHTML(row.activity)}</span></div>`;
+      }).join("") + `</section>`;
   });
-  html += `<div class="tt-note" style="margin-top:0">複習卷、高名模考等實際考程以行事曆為準；停課日當天課程全部暫停。</div>`;
-  body.innerHTML = html;
+  html += `<div class="tt-note">複習卷、高名模考等實際考程以行事曆為準；停課日當天課程全部暫停。</div>`;
+  el("ttBody").innerHTML = html;
 }
-document.getElementById("ttBtn").addEventListener("click", (e) => {
-  e.preventDefault();
-  document.getElementById("ttOverlay").style.display = "flex";
+
+function normalizeEvent(raw, index) {
+  const startDate = raw.start.slice(0, 10);
+  const allDay = !!raw.allDay || !raw.start.includes("T");
+  const endDate = raw.end ? raw.end.slice(0, 10) : startDate;
+  const start = parseLocal(raw.start);
+  const end = raw.end ? parseLocal(raw.end) : null;
+  const color = colorOf(raw);
+  return {
+    ...raw,
+    id: "event-" + index,
+    allDay,
+    start,
+    end,
+    startDate,
+    endDate,
+    color,
+    sortKey: start.getTime(),
+  };
+}
+
+function chooseDefaultDate(data) {
+  const today = localDateKey(new Date());
+  if (today >= data.range.start && today <= data.range.end) return today;
+  return data.range.start;
+}
+
+function render() {
+  const monthMode = state.view === "month";
+  el("tabList").classList.toggle("on", !monthMode);
+  el("tabMonth").classList.toggle("on", monthMode);
+  el("tabList").setAttribute("aria-selected", String(!monthMode));
+  el("tabMonth").setAttribute("aria-selected", String(monthMode));
+  el("todayPanel").classList.toggle("hidden", monthMode);
+  el("recentPanel").classList.toggle("hidden", monthMode);
+  el("agendaPanel").classList.toggle("hidden", monthMode);
+  el("monthPanel").classList.toggle("hidden", !monthMode);
+  if (monthMode) renderMonth();
+  renderHero();
+  renderWeekStrip();
+  renderQuickActions();
+  renderTypeChips();
+  renderAgenda();
+  renderRecent();
+  renderSheets();
+  updateNoticeBadge();
+  syncIcons();
+}
+
+// ---- 月曆模式：只放重要日程（模考／停課／備註／重要日程），複習卷與每日暑訓不上 ----
+
+function monthOf(dateKey) {
+  return dateKey.slice(0, 7);
+}
+
+function shiftMonth(cursor, delta) {
+  const [year, month] = cursor.split("-").map(Number);
+  const d = new Date(year, month - 1 + delta, 1);
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}`;
+}
+
+function clampMonth(cursor) {
+  const min = monthOf(state.data.range.start);
+  const max = monthOf(state.data.range.end);
+  return cursor < min ? min : cursor > max ? max : cursor;
+}
+
+function addDaysKey(dateKey, days) {
+  const d = parseLocal(dateKey);
+  d.setDate(d.getDate() + days);
+  return localDateKey(d);
+}
+
+function dayDiff(from, to) {
+  return Math.round((parseLocal(to) - parseLocal(from)) / 86400000);
+}
+
+function barLabel(event) {
+  return event.title.replace(/（[^（）]+）$/, "");
+}
+
+function renderMonth() {
+  if (!state.monthCursor) state.monthCursor = monthOf(state.defaultDate);
+  state.monthCursor = clampMonth(state.monthCursor);
+  const [year, month] = state.monthCursor.split("-").map(Number);
+  el("monthTitle").textContent = `${year}年${month}月`;
+  el("monthPrev").disabled = state.monthCursor <= monthOf(state.data.range.start);
+  el("monthNext").disabled = state.monthCursor >= monthOf(state.data.range.end);
+
+  const monthStart = `${state.monthCursor}-01`;
+  const monthEndExcl = `${shiftMonth(state.monthCursor, 1)}-01`;
+
+  // 暑訓期間提示列（每日暑訓不進格子）
+  const si = state.data.summer_info;
+  const showHint = si && si.start < monthEndExcl && monthStart <= si.end;
+  el("monthHint").classList.toggle("hidden", !showHint);
+  if (showHint) el("monthHint").textContent = `☀️ 暑訓期間 ${formatMonthDay(si.start)}～${formatMonthDay(si.end)}（僅參加學生），${si.time}`;
+
+  // 整理：跨日事件畫色條、單日事件放短標籤、停課日整格淡紅底
+  const bars = [];
+  const singles = new Map();
+  const closed = new Set();
+  state.events.filter(isNoticeEvent).forEach((event) => {
+    const endExcl = event.allDay && event.endDate > event.startDate ? event.endDate : addDaysKey(event.startDate, 1);
+    if (event.type === "停課") {
+      for (let date = event.startDate; date < endExcl; date = addDaysKey(date, 1)) closed.add(date);
+    }
+    if (dayDiff(event.startDate, endExcl) > 1) {
+      bars.push({ start: event.startDate, endExcl, color: event.color, label: barLabel(event), date: event.startDate });
+    } else {
+      const list = singles.get(event.startDate) || [];
+      list.push({ label: tagText(event), color: event.color });
+      singles.set(event.startDate, list);
+    }
+  });
+  // 暑訓模考週（僅暑訓學生）：以設定推得的一～五畫橘色條
+  if (si && si.mock_week_start) {
+    bars.push({ start: si.mock_week_start, endExcl: addDaysKey(si.mock_week_start, 5), color: TYPE_COLORS["暑訓"], label: "暑訓模考", date: si.mock_week_start });
+  }
+
+  const firstDay = parseLocal(monthStart);
+  const offset = (firstDay.getDay() + 6) % 7; // 週一起始
+  const gridStart = addDaysKey(monthStart, -offset);
+  const todayKey = localDateKey(new Date());
+  let html = "";
+  for (let weekStart = gridStart; weekStart < monthEndExcl; weekStart = addDaysKey(weekStart, 7)) {
+    const weekEndExcl = addDaysKey(weekStart, 7);
+    let cells = "";
+    for (let i = 0; i < 7; i++) {
+      const date = addDaysKey(weekStart, i);
+      if (date < monthStart || date >= monthEndExcl) {
+        cells += '<span class="m-cell m-blank"></span>';
+        continue;
+      }
+      const chips = singles.get(date) || [];
+      const shown = chips.slice(0, 2).map((chip) => `<span class="m-chip" style="--chip-color:${chip.color}">${escapeHTML(chip.label)}</span>`).join("");
+      const more = chips.length > 2 ? `<span class="m-more">+${chips.length - 2}</span>` : "";
+      const classes = ["m-cell"];
+      if (closed.has(date)) classes.push("closed");
+      if (date === todayKey) classes.push("today");
+      cells += `<button class="${classes.join(" ")}" type="button" data-action="month-pick" data-date="${date}" aria-label="${formatLongDate(date)}"><span class="m-date">${Number(date.slice(8))}</span>${shown}${more}</button>`;
+    }
+    let barHtml = "";
+    bars.forEach((bar) => {
+      const start = [bar.start, weekStart, monthStart].sort().pop();
+      const end = [bar.endExcl, weekEndExcl, monthEndExcl].sort().shift();
+      if (start >= end) return;
+      barHtml += `<button class="m-bar" type="button" data-action="month-pick" data-date="${bar.date}" style="grid-column:${dayDiff(weekStart, start) + 1} / ${dayDiff(weekStart, end) + 1};--bar-color:${bar.color}">${escapeHTML(bar.label)}</button>`;
+    });
+    html += `<div class="m-week">${cells}${barHtml}</div>`;
+  }
+  el("monthWeeks").innerHTML = html;
+}
+
+function renderHero() {
+  const selected = parseLocal(state.selectedDate);
+  const dayEvents = eventsForDate(state.selectedDate, true);
+  el("selectedDateTitle").textContent = `${selected.getMonth() + 1}月${selected.getDate()}日`;
+  el("weekdayPill").textContent = "週" + WEEKDAY_LABELS[selected.getDay()];
+  el("selectedDayLabel").textContent = state.selectedDate === localDateKey(new Date()) ? "今天" : "這天";
+  el("selectedDayCount").textContent = dayEvents.length;
+  el("todayEvents").innerHTML = dayEvents.length
+    ? dayEvents.map((event) => eventRowTemplate(event)).join("")
+    : '<div class="empty-state">這天沒有符合條件的行程。</div>';
+}
+
+function renderWeekStrip() {
+  const days = weekDays(state.selectedDate);
+  el("weekStrip").innerHTML = days.map((date) => {
+    const events = eventsForDate(date, false);
+    const primary = events[0] ? events[0].color : "#a8b2bd";
+    const dots = distinct(events.map((event) => event.color)).slice(0, 3)
+      .map((color) => `<span class="mini-dot" style="--dot-color:${color}"></span>`)
+      .join("");
+    const d = parseLocal(date);
+    return `
+      <button class="day-cell ${date === state.selectedDate ? "active" : ""}" type="button" data-action="select-date" data-date="${date}" aria-label="${formatLongDate(date)}，${events.length} 個行程">
+        <span class="day-week">${WEEKDAY_LABELS[d.getDay()]}</span>
+        <span class="day-date">${d.getMonth() + 1}/${d.getDate()}</span>
+        <span class="day-count" style="--day-color:${primary}">${events.length || "休"}</span>
+        <span class="day-dots">${dots}</span>
+      </button>`;
+  }).join("");
+}
+
+function renderQuickActions() {
+  const counts = quickCounts();
+  el("quickActions").innerHTML = QUICK_ITEMS.map((item) => `
+    <button class="mini-action" type="button" data-action="quick-${item.key}" style="--action-color:${item.color}" aria-label="${item.label} ${counts[item.key]} 筆">
+      <i data-lucide="${item.icon}" size="17"></i>
+      <span>${item.label}</span>
+    </button>
+  `).join("");
+}
+
+function renderTypeChips() {
+  el("typeChips").innerHTML = TYPE_OPTIONS.map((type) => `
+    <button class="chip ${state.activeType === type ? "on" : ""}" type="button" data-action="set-type" data-type="${escapeAttr(type)}">${escapeHTML(type)}</button>
+  `).join("");
+}
+
+function renderAgenda() {
+  const days = weekDays(state.selectedDate);
+  const groups = days.map((date) => ({ date, events: eventsForDate(date, true) }))
+    .filter((group) => group.events.length > 0);
+  el("clearSearch").classList.toggle("show", !!state.search);
+  el("agendaList").innerHTML = groups.length
+    ? groups.map((group) => dateGroupTemplate(group)).join("")
+    : '<div class="empty-state">本週沒有符合篩選的行程。可以清除篩選或換一天看看。</div>';
+}
+
+function renderRecent() {
+  const items = importantEvents().slice(0, 5);
+  el("recentList").innerHTML = items.length
+    ? items.map((event) => recentItemTemplate(event)).join("")
+    : '<div class="empty-state">目前沒有停課、模考或備註。</div>';
+  el("noticeList").innerHTML = importantEvents().map((event) => recentItemTemplate(event)).join("") || '<div class="empty-state">目前沒有通知。</div>';
+}
+
+function renderSheets() {
+  const subjects = distinct(state.events.map((event) => groupSubject(event.subject)).filter(Boolean));
+  el("sheetTypeSelectors").innerHTML = TYPE_OPTIONS.map((type) => `
+    <button class="selector ${state.activeType === type ? "on" : ""}" type="button" data-action="set-type" data-type="${escapeAttr(type)}">${escapeHTML(type)}</button>
+  `).join("");
+  el("sheetSubjectSelectors").innerHTML = subjects.map((subject) => `
+    <button class="selector ${state.activeSubjects.has(subject) ? "on" : ""}" type="button" data-action="toggle-subject" data-subject="${escapeAttr(subject)}">${escapeHTML(subject)}</button>
+  `).join("");
+}
+
+function updateNoticeBadge() {
+  const count = importantEvents().length;
+  el("noticeBadge").textContent = count > 9 ? "9+" : String(count);
+}
+
+function eventRowTemplate(event) {
+  const meta = eventMeta(event);
+  return `
+    <button class="event-row${event.type === "停課" ? " cancel-event" : ""}" type="button" data-action="open-event" data-event-id="${event.id}" style="--event-color:${event.color}">
+      <span class="time-rail">${timeRail(event)}</span>
+      <span class="dot-line"><span class="dot"></span></span>
+      <span class="event-main">
+        <span class="event-title-line">
+          <span class="subject-tag">${escapeHTML(tagText(event))}</span>
+          <span class="event-name">${escapeHTML(cleanTitle(event))}</span>
+        </span>
+        <span class="meta-line">${meta}</span>
+      </span>
+      <span class="event-side">${sideMeta(event)}</span>
+    </button>`;
+}
+
+function dateGroupTemplate(group) {
+  const d = parseLocal(group.date);
+  return `
+    <section class="date-group">
+      <div class="date-group-head">
+        <span>${d.getMonth() + 1}月${d.getDate()}日 週${WEEKDAY_LABELS[d.getDay()]}</span>
+        <span class="date-group-count">${group.events.length} 個行程 <i data-lucide="chevron-down" size="19"></i></span>
+      </div>
+      ${group.events.map((event) => compactEventTemplate(event)).join("")}
+    </section>`;
+}
+
+function compactEventTemplate(event) {
+  return `
+    <button class="compact-event${event.type === "停課" ? " cancel-event" : ""}" type="button" data-action="open-event" data-event-id="${event.id}" style="--event-color:${event.color}">
+      <span class="color-bar"></span>
+      <span class="compact-time">${compactTime(event)}</span>
+      <span>
+        <span class="compact-title"><span class="small-tag">${escapeHTML(tagText(event))}</span><strong>${escapeHTML(cleanTitle(event))}</strong></span>
+        <span class="compact-detail">${escapeHTML(compactDetail(event))}</span>
+      </span>
+      <span class="compact-side">${sideMeta(event)}</span>
+    </button>`;
+}
+
+function recentItemTemplate(event) {
+  return `
+    <button class="recent-item${event.type === "停課" ? " cancel-event" : ""}" type="button" data-action="open-event" data-event-id="${event.id}" style="--event-color:${event.color}">
+      <span class="recent-kind"><i data-lucide="${noticeIcon(event)}"></i></span>
+      <span class="recent-text">【${escapeHTML(noticeLabel(event))}】${escapeHTML(cleanTitle(event))}</span>
+      <span class="recent-date">${formatEventDates(event)}</span>
+      <span class="chevron"><i data-lucide="chevron-right" size="18"></i></span>
+    </button>`;
+}
+
+function eventsForDate(date, applyFilters) {
+  return state.events
+    .filter((event) => occursOn(event, date))
+    .filter((event) => !applyFilters || matchesFilters(event))
+    .sort(compareEvents);
+}
+
+function importantEvents() {
+  return state.events
+    .filter(isNoticeEvent)
+    .filter((event) => event.startDate >= state.defaultDate || (event.allDay && event.endDate > state.defaultDate))
+    .sort(compareTimelineEvents);
+}
+
+function quickCounts() {
+  const week = weekDays(state.selectedDate);
+  return {
+    today: eventsForDate(state.selectedDate, false).length,
+    week: state.events.filter((event) => week.some((date) => occursOn(event, date))).length,
+    mock: state.events.filter(isExamEvent).length,
+    notice: state.events.filter((event) => event.type === "停課").length,
+    note: state.events.filter((event) => event.type === "備註").length,
+  };
+}
+
+function matchesFilters(event) {
+  const typeMatch = matchesType(event, state.activeType);
+  const subjectMatch = state.activeSubjects.size === 0 || state.activeSubjects.has(groupSubject(event.subject));
+  const query = state.search.trim().toLowerCase();
+  const queryMatch = !query || [event.title, event.type, event.subject, groupSubject(event.subject), event.detail].join(" ").toLowerCase().includes(query);
+  return typeMatch && subjectMatch && queryMatch;
+}
+
+function matchesType(event, type) {
+  if (type === "全部") return true;
+  if (type === "停課與備註") return ["停課", "備註", "重要日程"].includes(event.type);
+  if (type === "模考與複習") return isExamEvent(event);
+  return event.type === type;
+}
+
+function isMockEvent(event) {
+  return MOCK_TYPES.includes(event.type);
+}
+
+function isReviewEvent(event) {
+  return REVIEW_TYPES.includes(event.type);
+}
+
+function isExamEvent(event) {
+  return isMockEvent(event) || isReviewEvent(event);
+}
+
+function isNoticeEvent(event) {
+  return isMockEvent(event) || NOTICE_TYPES.includes(event.type);
+}
+
+function occursOn(event, date) {
+  if (!event.allDay) return event.startDate === date;
+  const exclusiveEnd = event.endDate || event.startDate;
+  return date >= event.startDate && date < exclusiveEnd;
+}
+
+function compareEvents(a, b) {
+  if (a.allDay !== b.allDay) return a.allDay ? -1 : 1;
+  return a.sortKey - b.sortKey || a.title.localeCompare(b.title, "zh-Hant");
+}
+
+function compareTimelineEvents(a, b) {
+  return a.sortKey - b.sortKey || a.title.localeCompare(b.title, "zh-Hant");
+}
+
+function weekDays(date) {
+  const d = parseLocal(date);
+  const day = d.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  d.setDate(d.getDate() + diff);
+  return Array.from({ length: 7 }, (_, index) => {
+    const copy = new Date(d);
+    copy.setDate(d.getDate() + index);
+    return localDateKey(copy);
+  });
+}
+
+function colorOf(event) {
+  if (isMockEvent(event)) return TYPE_COLORS["模考與複習"];
+  if (event.type === "停課") return TYPE_COLORS["停課"];
+  if (event.type === "備註") return TYPE_COLORS["備註"];
+  if (event.type === "重要日程") return TYPE_COLORS["重要提醒"];
+  return SUBJECT_COLORS[groupSubject(event.subject)] || TYPE_COLORS[event.type] || "#607d8b";
+}
+
+function cleanTitle(event) {
+  if (isMockEvent(event)) {
+    const title = event.title
+      .replace(event.subject || "", "")
+      .replace("高名模考", "")
+      .replace("模考", "")
+      .trim();
+    return `${groupSubject(event.subject) || "模考"}${title ? " " + title : ""}`;
+  }
+  if (event.type === "暑訓") return `${event.subject}暑期訓練`;
+  if (!event.subject) return event.title;
+  const stripped = event.title.replace(event.subject, "").trim() || event.title;
+  // 歸併大科（自然、社會）時標題保留細科名稱，週六歷地公才分得出來
+  if (groupSubject(event.subject) !== event.subject) return `${event.subject}${stripped}`;
+  return stripped;
+}
+
+function typeLabel(event) {
+  if (isExamEvent(event)) return "模考與複習";
+  if (event.type === "重要日程") return "停課與備註";
+  return event.type;
+}
+
+function tagText(event) {
+  if (isMockEvent(event)) return "模考";
+  if (isReviewEvent(event)) return groupSubject(event.subject || "複習");
+  if (event.type === "停課") return "停課";
+  if (event.type === "備註") return "備註";
+  if (event.type === "重要日程") return "重要";
+  if (event.type === "暑訓") return "暑訓";
+  return groupSubject(event.subject || event.type);
+}
+
+function noticeLabel(event) {
+  if (isMockEvent(event)) return "模考";
+  if (event.type === "重要日程") return "重要日程";
+  return event.type;
+}
+
+function formatEventDates(event) {
+  if (event.allDay && event.endDate && event.endDate > event.startDate) {
+    const endIncl = new Date(parseLocal(event.endDate).getTime() - 86400000);
+    const endKey = localDateKey(endIncl);
+    if (endKey > event.startDate) return `${formatMonthDay(event.startDate)}–${formatMonthDay(endKey)}`;
+  }
+  return formatMonthDay(event.startDate);
+}
+
+function groupSubject(subject) {
+  return SUBJECT_GROUPS[subject] || subject;
+}
+
+function eventMeta(event) {
+  const bits = [];
+  const scope = extractDetail(event.detail, "範圍");
+  const content = extractDetail(event.detail, "內容");
+  const paper = extractDetail(event.detail, "卷別");
+  if (scope) bits.push(`<span><i data-lucide="target" size="17"></i>${escapeHTML(scope)}</span>`);
+  if (!scope && content) bits.push(`<span><i data-lucide="file-text" size="17"></i>${escapeHTML(content)}</span>`);
+  if (paper) bits.push(`<span><i data-lucide="file-text" size="17"></i>${escapeHTML(paper)}</span>`);
+  if (!scope && !content && !paper && event.type === "暑訓") bits.push('<span><i data-lucide="map-pin" size="17"></i>自強教室</span>');
+  return bits.join("");
+}
+
+function sideMeta(event) {
+  const book = extractDetail(event.detail, "冊別");
+  if (book) return `<i data-lucide="book-open" size="19"></i><span>${escapeHTML(book)}</span>`;
+  if (event.type === "停課") return '<i data-lucide="bell" size="19"></i><span>停課</span>';
+  if (event.type === "備註" || event.type === "重要日程") return '<i data-lucide="bell" size="19"></i><span>請留意</span>';
+  if (isMockEvent(event)) return '<i data-lucide="bell" size="19"></i><span>準時</span>';
+  if (event.type === "暑訓") return '<i data-lucide="map-pin" size="19"></i><span>自強教室</span>';
+  return "";
+}
+
+function compactDetail(event) {
+  const book = extractDetail(event.detail, "冊別");
+  const scope = extractDetail(event.detail, "範圍");
+  const paper = extractDetail(event.detail, "卷別");
+  if (isMockEvent(event)) return paper ? `卷別 ${paper}` : scope || event.type;
+  if (book && scope) return `${book}・${scope}`;
+  if (book || scope) return book || scope;
+  if (event.detail) return event.detail.replace(/\n/g, "・");
+  if (event.type === "正課") return "冊別 B1";
+  if (event.type === "暑訓") return "自強教室";
+  return event.type;
+}
+
+function extractDetail(detail, label) {
+  if (!detail) return "";
+  const line = detail.split("\n").find((item) => item.startsWith(label + "："));
+  return line ? line.replace(label + "：", "") : "";
+}
+
+function timeRail(event) {
+  if (event.allDay) return "全天";
+  return `${pad(event.start.getHours())}:${pad(event.start.getMinutes())}<span class="dash">-</span>${event.end ? `${pad(event.end.getHours())}:${pad(event.end.getMinutes())}` : ""}`;
+}
+
+function compactTime(event) {
+  if (event.allDay) return "全天";
+  const start = `${pad(event.start.getHours())}:${pad(event.start.getMinutes())}`;
+  const end = event.end ? `${pad(event.end.getHours())}:${pad(event.end.getMinutes())}` : "";
+  return end ? `${start}-${end}` : start;
+}
+
+function formatLongDate(date) {
+  const d = parseLocal(date);
+  return `${d.getMonth() + 1}月${d.getDate()}日 週${WEEKDAY_LABELS[d.getDay()]}`;
+}
+
+function formatShortDate(date) {
+  return date.replace(/-/g, "/");
+}
+
+function formatMonthDay(date) {
+  const d = parseLocal(date);
+  return `${d.getMonth() + 1}/${d.getDate()}`;
+}
+
+function parseLocal(value) {
+  return new Date(value.includes("T") ? value : value + "T00:00:00");
+}
+
+function localDateKey(date) {
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
+function pad(value) {
+  return String(value).padStart(2, "0");
+}
+
+function distinct(values) {
+  return [...new Set(values)];
+}
+
+function escapeHTML(value) {
+  return String(value ?? "").replace(/[&<>"']/g, (char) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;",
+  }[char]));
+}
+
+function escapeAttr(value) {
+  return escapeHTML(value);
+}
+
+function noticeIcon(event) {
+  if (isMockEvent(event)) return "file-check-2";
+  if (event.type === "停課") return "megaphone";
+  if (event.type === "重要日程") return "calendar-check";
+  return "notebook-pen";
+}
+
+function syncIcons() {
+  if (window.lucide) window.lucide.createIcons();
+}
+
+function scrollToId(id) {
+  el(id).scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function openPanel(id) {
+  closePanels();
+  el(id).classList.add("show");
+  el(id).setAttribute("aria-hidden", "false");
+  syncIcons();
+}
+
+function closePanels() {
+  document.querySelectorAll(".drawer.show, .sheet.show, .modal.show").forEach((panel) => {
+    panel.classList.remove("show");
+    panel.setAttribute("aria-hidden", "true");
+  });
+}
+
+function openEvent(id) {
+  const event = state.events.find((item) => item.id === id);
+  if (!event) return;
+  state.activeEventId = id;
+  el("modalTag").textContent = tagText(event);
+  el("modalTag").style.background = event.color;
+  el("modalTitle").textContent = event.title;
+  el("modalTime").querySelector("span").textContent = `${formatLongDate(event.startDate)}　${compactTime(event)}`;
+  el("modalDetail").textContent = event.detail || compactDetail(event) || "（無其他說明）";
+  openPanel("eventModal");
+}
+
+function showToast(message) {
+  const toast = el("toast");
+  toast.textContent = message;
+  toast.classList.add("show");
+  clearTimeout(showToast.timer);
+  showToast.timer = setTimeout(() => toast.classList.remove("show"), 1900);
+}
+
+function resetFilters() {
+  state.activeType = "全部";
+  state.activeSubjects.clear();
+  state.search = "";
+  el("searchInput").value = "";
+  render();
+}
+
+function jumpToFirstMatching(predicate) {
+  const target = state.events.find(predicate);
+  if (target) state.selectedDate = target.startDate;
+}
+
+function setActiveType(type) {
+  state.activeType = type;
+  render();
+}
+
+document.addEventListener("click", async (event) => {
+  const trigger = event.target.closest("[data-action]");
+  if (!trigger) return;
+  const action = trigger.dataset.action;
+
+  if (action === "open-menu") openPanel("menuDrawer");
+  if (action === "open-notices") openPanel("noticeSheet");
+  if (action === "open-filters") openPanel("filterSheet");
+  if (action === "open-timetable") openPanel("timetableSheet");
+  if (action === "close-panels") closePanels();
+
+  if (action === "set-view") {
+    state.view = trigger.dataset.view;
+    render();
+    window.scrollTo({ top: 0 });
+  }
+
+  if (action === "month-prev" || action === "month-next") {
+    state.monthCursor = clampMonth(shiftMonth(state.monthCursor, action === "month-prev" ? -1 : 1));
+    render();
+  }
+
+  if (action === "month-pick") {
+    state.view = "list";
+    state.selectedDate = trigger.dataset.date;
+    state.nav = "today";
+    render();
+    scrollToId("todayPanel");
+  }
+
+  if (action === "select-date") {
+    state.selectedDate = trigger.dataset.date;
+    state.nav = "today";
+    render();
+  }
+
+  if (action === "jump-today" || action === "nav-today") {
+    closePanels();
+    state.view = "list";
+    state.selectedDate = state.defaultDate;
+    state.nav = "today";
+    render();
+    scrollToId("todayPanel");
+  }
+
+  if (action === "nav-calendar") {
+    closePanels();
+    state.view = "list";
+    state.nav = "calendar";
+    render();
+    scrollToId("agendaPanel");
+  }
+
+  if (action === "nav-search") {
+    closePanels();
+    state.view = "list";
+    state.nav = "search";
+    render();
+    scrollToId("agendaPanel");
+    setTimeout(() => el("searchInput").focus(), 240);
+  }
+
+  if (action === "set-type") {
+    setActiveType(trigger.dataset.type);
+  }
+
+  if (action === "toggle-subject") {
+    const subject = trigger.dataset.subject;
+    if (state.activeSubjects.has(subject)) state.activeSubjects.delete(subject);
+    else state.activeSubjects.add(subject);
+    render();
+  }
+
+  if (action === "reset-filters") resetFilters();
+  if (action === "clear-search") {
+    state.search = "";
+    el("searchInput").value = "";
+    render();
+  }
+
+  if (action === "quick-today") {
+    state.view = "list";
+    state.activeType = "全部";
+    state.selectedDate = state.defaultDate;
+    state.nav = "today";
+    render();
+    scrollToId("todayPanel");
+  }
+
+  if (action === "quick-week") {
+    state.view = "list";
+    state.activeType = "全部";
+    state.nav = "calendar";
+    render();
+    scrollToId("agendaPanel");
+  }
+
+  if (action === "quick-mock") {
+    closePanels();
+    state.view = "list";
+    jumpToFirstMatching(isExamEvent);
+    state.activeType = "模考與複習";
+    state.nav = "calendar";
+    render();
+    scrollToId("agendaPanel");
+  }
+
+  if (action === "quick-notice") {
+    state.view = "list";
+    jumpToFirstMatching((event) => event.type === "停課");
+    state.activeType = "停課與備註";
+    state.nav = "calendar";
+    render();
+    scrollToId("agendaPanel");
+  }
+
+  if (action === "quick-note" || action === "show-notes") {
+    closePanels();
+    state.view = "list";
+    jumpToFirstMatching((event) => event.type === "停課" || event.type === "備註");
+    state.activeType = "停課與備註";
+    state.nav = "calendar";
+    render();
+    scrollToId("agendaPanel");
+  }
+
+  if (action === "open-event") openEvent(trigger.dataset.eventId);
+
+  if (action === "copy-event" && state.activeEventId) {
+    const selected = state.events.find((item) => item.id === state.activeEventId);
+    if (!selected) return;
+    const text = `${selected.title}\n${formatLongDate(selected.startDate)} ${compactTime(selected)}\n${selected.detail || ""}`.trim();
+    try {
+      await navigator.clipboard.writeText(text);
+      showToast("已複製行程資訊");
+    } catch {
+      showToast("瀏覽器未允許複製，可直接查看詳情");
+    }
+  }
 });
-document.getElementById("ttOverlay").addEventListener("click", (e) => {
-  if (e.target.id === "ttOverlay") e.target.style.display = "none";
+
+el("searchInput").addEventListener("input", (event) => {
+  state.search = event.target.value;
+  render();
 });
+
+window.addEventListener("load", syncIcons);
 </script>
 </body>
 </html>

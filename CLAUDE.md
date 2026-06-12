@@ -4,7 +4,7 @@
 
 ## 架構
 
-`data/*.csv` →（`node tools/build.mjs`）→ `docs/events.json` → `docs/index.html`（FullCalendar）顯示。
+`data/*.csv` →（`node tools/build.mjs`）→ `docs/events.json` → `docs/index.html`（自製手機優先介面：列表首頁〔今日卡＋重要提醒＋本週清單〕＋月曆模式〔只放模考/停課/備註/重要日程〕，2026-06-12 起取代舊 FullCalendar 版）。`docs/prototype.html` 是同款設計沙盒，改正式版改 index.html。
 託管：GitHub Pages（main 分支 `/docs`）。發布＝build + commit + push（或直接跑 `發布.command`）。
 本機預覽：`node tools/serve.mjs` → http://localhost:8765/
 

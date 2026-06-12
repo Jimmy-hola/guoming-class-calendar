@@ -35,7 +35,21 @@ function parseCSV(text) {
   return rows.map((r) => Object.fromEntries(header.map((h, i) => [h.trim(), (r[i] ?? "").trim()])));
 }
 
-const readData = (name) => parseCSV(readFileSync(join(ROOT, "data", name), "utf8"));
+const DATE_FIELDS = new Set(["date", "date_start", "date_end", "official_date"]);
+
+function normalizeDate(value) {
+  const m = String(value || "").trim().match(/^(\d{4})[/-](\d{1,2})[/-](\d{1,2})$/);
+  if (!m) return value;
+  return `${m[1]}-${m[2].padStart(2, "0")}-${m[3].padStart(2, "0")}`;
+}
+
+function normalizeRowDates(row) {
+  return Object.fromEntries(
+    Object.entries(row).map(([key, value]) => [key, DATE_FIELDS.has(key) ? normalizeDate(value) : value])
+  );
+}
+
+const readData = (name) => parseCSV(readFileSync(join(ROOT, "data", name), "utf8")).map(normalizeRowDates);
 
 // ---------- 讀取資料 ----------
 const config = Object.fromEntries(readData("設定.csv").map((r) => [r.key, r.value]));
