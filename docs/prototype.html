@@ -1482,8 +1482,17 @@ function normalizeEvent(raw, index) {
 
 function chooseDefaultDate(data) {
   const today = localDateKey(new Date());
-  if (today >= data.range.start && today <= data.range.end) return today;
+  // 開課（課表生效日）前也讓今日卡／本週清單／重要通知從「今天」起算，
+  // 這樣 6/26 前的停課、考前特訓等近期行程才會出現在重要通知，而不是被鎖在生效日。
+  if (today <= data.range.end) return today;
   return data.range.start;
+}
+
+// 換日／導覽可回溯的最早日：起點與今天取較早者（開課前今天可能早於課表生效日）
+function displayStart(data) {
+  const start = data.range.start;
+  const today = localDateKey(new Date());
+  return today < start ? today : start;
 }
 
 function render() {
@@ -1519,7 +1528,7 @@ function shiftMonth(cursor, delta) {
 }
 
 function clampMonth(cursor) {
-  const min = monthOf(state.data.range.start);
+  const min = monthOf(displayStart(state.data));
   const max = monthOf(state.data.range.end);
   return cursor < min ? min : cursor > max ? max : cursor;
 }
@@ -1543,7 +1552,7 @@ function renderMonth() {
   state.monthCursor = clampMonth(state.monthCursor);
   const [year, month] = state.monthCursor.split("-").map(Number);
   el("monthTitle").textContent = `${year}年${month}月`;
-  el("monthPrev").disabled = state.monthCursor <= monthOf(state.data.range.start);
+  el("monthPrev").disabled = state.monthCursor <= monthOf(displayStart(state.data));
   el("monthNext").disabled = state.monthCursor >= monthOf(state.data.range.end);
 
   const monthStart = `${state.monthCursor}-01`;
@@ -2055,7 +2064,7 @@ function showToast(message) {
 function shiftSelectedDate(delta) {
   const next = addDaysKey(state.selectedDate, delta);
   if (!state.data) return;
-  if (next < state.data.range.start) {
+  if (next < displayStart(state.data)) {
     showToast("已到行事曆起始日");
     return;
   }
