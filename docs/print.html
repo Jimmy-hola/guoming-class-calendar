@@ -89,7 +89,8 @@ fetch("events.json?v=" + Date.now())
     const pages = document.getElementById("pages");
     pages.innerHTML = "";
     let [y, m] = data.range.start.split("-").map(Number);
-    const [ey, em] = data.range.end.split("-").map(Number);
+    const printEnd = data.print_through || data.range.end;
+    const [ey, em] = printEnd.split("-").map(Number);
     while (y < ey || (y === ey && m <= em)) {
       pages.appendChild(renderMonth(y, m, data, byDate, closedDays, noteDays));
       m++; if (m > 12) { m = 1; y++; }

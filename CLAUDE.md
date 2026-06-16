@@ -4,7 +4,7 @@
 
 ## 架構
 
-`data/*.csv` →（`node tools/build.mjs`）→ `docs/events.json` → `docs/index.html`（自製手機優先介面：列表首頁〔今日卡＋重要提醒＋本週清單〕＋月曆模式〔只放模考/停課/備註/重要日程〕，2026-06-12 起取代舊 FullCalendar 版）。`docs/prototype.html` 是同款設計沙盒，改正式版改 index.html。
+`data/*.csv` →（`node tools/build.mjs`，依 `設定.csv` 的「公布截止日」過濾公開資料）→ `docs/events.json` → `docs/index.html`（自製手機優先介面：列表首頁〔今日卡＋重要通知＋本週清單〕＋月曆模式〔只放模考/停課/備註/重要日程〕，2026-06-12 起取代舊 FullCalendar 版）。`docs/prototype.html` 是同款設計沙盒，UI 改動盡量同步；正式版以 index.html 為準。
 託管：GitHub Pages（main 分支 `/docs`）。發布＝build + commit + push（或直接跑 `發布.command`）。
 本機預覽：`node tools/serve.mjs` → http://localhost:8765/
 
@@ -16,5 +16,7 @@
 - 行事曆顯示分類保持精簡：**暑訓**（全天標籤不標時間，含暑訓模考）、**模考與複習**（複習卷＋高名模考）、**停課與備註**（重要日程＋停課備註）；每週固定課表（正課、測輔、週六國文複習）不上行事曆，顯示在網頁「📋 課表」視窗（資料仍在 `課表.csv`）
 - `複習卷進度.csv` 只填日期/時段/科目/回次，範圍說明由 build 自動 join `複習卷清單.csv`
 - **高名模考**（全班）第1～6回逐場列在 `data/高名模考.csv`：每回官方日期為週日，本班提前於該週一～五晚上測輔時段考完（一國二英三數四自五社）；**模考那週一～五不排複習卷**（build 會檢查警告；週六歷地公照常）。**暑訓模考**（僅暑訓學生）由 `設定.csv`「暑訓模考週開始」產生，全天標籤
+- `設定.csv` 的「公布截止日」會在 build 階段阻擋後續事件輸出到公開的 `docs/events.json`；「紙本公布截止日」只控制 `docs/print.html` 印到哪個月份
+- 國定假日先以 `data/特殊日.csv` 的 `備註` 暫定，不自動當停課；確認停課才把 `type` 改成 `停課`
 - **此 repo 是公開的**：不要放學生個資、成績、LINE 截圖；原始照片留在本機 `國三資料/整理前`
 - 下午時段叫「暑訓」不是「自修」；改動後記得 `node tools/build.mjs` 重建再 commit

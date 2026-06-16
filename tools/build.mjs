@@ -64,6 +64,9 @@ const mockExams = readData("高名模考.csv");
 const START = config["課表生效日"];
 const END = config["行事曆結束日"];
 if (!START || !END) throw new Error("設定.csv 缺少 課表生效日 或 行事曆結束日");
+const PUBLISH_THROUGH = config["公布截止日"] || END;
+const EFFECTIVE_END = PUBLISH_THROUGH < END ? PUBLISH_THROUGH : END;
+const PRINT_THROUGH = config["紙本公布截止日"] || PUBLISH_THROUGH;
 
 const WEEKDAYS = ["日", "一", "二", "三", "四", "五", "六"];
 const fmt = (d) => d.toISOString().slice(0, 10);
@@ -205,6 +208,7 @@ for (const r of importantDays) {
 }
 
 events.sort((a, b) => (a.start < b.start ? -1 : 1));
+const publishedEvents = events.filter((e) => String(e.start).slice(0, 10) <= EFFECTIVE_END);
 
 // ---------- 課表視窗資料（每週固定課表＋暑訓時段說明） ----------
 const summerDates = selfStudy.map((r) => r.date).sort();
@@ -221,10 +225,13 @@ const summer_info = selfStudy.length
 const out = {
   site_title: config["網站標題"] || "班級行事曆",
   generated_at: new Date().toLocaleString("zh-TW", { timeZone: "Asia/Taipei", hour12: false }),
-  range: { start: START, end: END },
+  range: { start: START, end: EFFECTIVE_END },
+  full_end: END,
+  publish_through: PUBLISH_THROUGH,
+  print_through: PRINT_THROUGH,
   timetable,
   summer_info,
-  events,
+  events: publishedEvents,
 };
 writeFileSync(join(ROOT, "docs", "events.json"), JSON.stringify(out, null, 1), "utf8");
-console.log(`✅ 已產出 docs/events.json：共 ${events.length} 筆事件（${START} ~ ${END}）`);
+console.log(`✅ 已產出 docs/events.json：已公布至 ${EFFECTIVE_END}（完整排程至 ${END}），公布 ${publishedEvents.length}/${events.length} 筆事件`);

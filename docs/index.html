@@ -242,7 +242,26 @@
   .day-nav {
     margin-left: auto;
     display: flex;
+    align-items: center;
     gap: 2px;
+  }
+
+  .today-btn {
+    min-width: 48px;
+    height: 38px;
+    padding: 0 14px;
+    border: 1px solid #bed4e4;
+    border-radius: 999px;
+    background: #fff;
+    color: var(--navy);
+    font-size: 0.95rem;
+    font-weight: 850;
+    box-shadow: 0 5px 14px rgba(19, 79, 117, 0.08);
+  }
+
+  .today-btn:hover,
+  .today-btn:focus-visible {
+    background: #eef6fc;
   }
 
   .day-nav .icon-button {
@@ -262,6 +281,13 @@
   .event-stack {
     margin-top: 8px;
     border-top: 0;
+  }
+
+  .publish-note {
+    margin: 12px 0 0;
+    color: #596b7a;
+    font-size: 0.94rem;
+    line-height: 1.5;
   }
 
   .event-row {
@@ -1217,6 +1243,7 @@
         <h2 id="selectedDateTitle">--</h2>
         <button class="weekday-pill" type="button" data-action="jump-today" id="weekdayPill">--</button>
         <div class="day-nav">
+          <button class="today-btn" type="button" data-action="jump-today">今天</button>
           <button class="icon-button" type="button" data-action="shift-date" data-delta="-1" aria-label="前一天"><i data-lucide="chevron-left" size="24"></i></button>
           <button class="icon-button" type="button" data-action="shift-date" data-delta="1" aria-label="後一天"><i data-lucide="chevron-right" size="24"></i></button>
         </div>
@@ -1229,12 +1256,13 @@
       <div class="week-strip" id="weekStrip"></div>
     </section>
 
-    <section class="recent-panel" id="recentPanel" aria-label="重要提醒">
+    <section class="recent-panel" id="recentPanel" aria-label="重要通知">
       <div class="agenda-header">
-        <h2 class="section-title">重要提醒</h2>
+        <h2 class="section-title">重要通知</h2>
         <button class="filter-button" type="button" data-action="open-notices">查看全部 <i data-lucide="chevron-right" size="19"></i></button>
       </div>
       <div class="recent-list" id="recentList"></div>
+      <p class="publish-note" id="publishNote"></p>
     </section>
 
     <section class="agenda-panel" id="agendaPanel" aria-label="接下來">
@@ -1263,7 +1291,6 @@
         <span><i style="--lg-color:#0b75d1"></i>備註</span>
         <span><i style="--lg-color:#7c43c6"></i>重要日程</span>
       </div>
-      <div class="agenda-list month-detail hidden" id="monthDayDetail" aria-label="當日行程明細"></div>
     </section>
   </main>
 
@@ -1317,6 +1344,17 @@
       <div class="modal-actions">
         <button class="secondary-button" type="button" data-action="copy-event"><i data-lucide="copy" size="17"></i> 複製資訊</button>
       </div>
+    </section>
+  </div>
+
+  <div class="modal" id="dayModal" aria-hidden="true">
+    <button class="scrim" type="button" data-action="close-panels" aria-label="關閉"></button>
+    <section class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="dayModalTitle">
+      <div class="panel-head">
+        <h2 class="panel-title" id="dayModalTitle"></h2>
+        <button class="icon-button" type="button" data-action="close-panels" aria-label="關閉當日行程"><i data-lucide="x"></i></button>
+      </div>
+      <div class="agenda-list" id="dayModalList"></div>
     </section>
   </div>
 
@@ -1391,7 +1429,8 @@ function hydrateStatic(data) {
   document.title = data.site_title;
   el("drawerTitle").textContent = data.site_title;
   el("updatedText").textContent = data.generated_at + " 更新";
-  el("drawerNote").textContent = "資料區間：" + formatShortDate(data.range.start) + " - " + formatShortDate(data.range.end) + "。實際考程以本行事曆為準，停課日當天課程全部暫停。";
+  el("drawerNote").textContent = "已公布至 " + formatShortDate(data.range.end) + "，後續進度老師確認後更新。實際考程以本行事曆為準，停課日當天課程全部暫停。";
+  el("publishNote").textContent = "🔒 本行事曆已公布至 " + formatMonthDay(data.range.end) + "，後續進度暫定中，老師確認後更新。";
   renderTimetable(data);
 }
 
@@ -1575,23 +1614,16 @@ function renderMonth() {
     html += `<div class="m-week">${cells}${barHtml}</div>`;
   }
   el("monthWeeks").innerHTML = html;
-  renderMonthDetail();
 }
 
-// 月曆模式點日期：直接在月曆下方展開當天全部行程（含複習卷、暑訓）
-function renderMonthDetail() {
-  const box = el("monthDayDetail");
-  const date = state.monthDetailDate;
-  if (!date || monthOf(date) !== state.monthCursor) {
-    box.classList.add("hidden");
-    box.innerHTML = "";
-    return;
-  }
+function openDayModal(date) {
   const events = eventsForDate(date, false);
-  box.classList.remove("hidden");
-  box.innerHTML = events.length
-    ? dateGroupTemplate({ date, events })
-    : `<section class="date-group"><div class="date-group-head"><span>${formatLongDate(date)}</span></div><div class="empty-state">這天沒有行程。</div></section>`;
+  el("dayModalTitle").textContent = formatLongDate(date);
+  el("dayModalList").innerHTML = events.length
+    ? events.map((event) => compactEventTemplate(event)).join("")
+    : '<div class="empty-state">這天沒有行程。</div>';
+  openPanel("dayModal");
+  syncIcons();
 }
 
 function renderHero() {
@@ -2023,8 +2055,13 @@ function showToast(message) {
 
 function shiftSelectedDate(delta) {
   const next = addDaysKey(state.selectedDate, delta);
-  if (!state.data || next < state.data.range.start || next > state.data.range.end) {
-    showToast("已到行事曆範圍邊界");
+  if (!state.data) return;
+  if (next < state.data.range.start) {
+    showToast("已到行事曆起始日");
+    return;
+  }
+  if (next > state.data.range.end) {
+    showToast(`${formatMonthDay(state.data.range.end)} 之後為暫定進度，老師確認後公布`);
     return;
   }
   state.selectedDate = next;
@@ -2060,6 +2097,7 @@ document.addEventListener("click", async (event) => {
     state.monthDetailDate = trigger.dataset.date;
     state.selectedDate = trigger.dataset.date;
     render();
+    openDayModal(trigger.dataset.date);
   }
 
   if (action === "select-date") {
