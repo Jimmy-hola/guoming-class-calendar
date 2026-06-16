@@ -1375,7 +1375,7 @@ const SUBJECT_COLORS = {
 const TYPE_COLORS = {
   "暑訓": "#f28c00",
   "模考與複習": "#ef3340",
-  "重要提醒": "#7c43c6",
+  "重要日程": "#7c43c6",
   "停課": "#ef3340",
   "備註": "#0b75d1",
 };
@@ -1675,11 +1675,10 @@ function renderAgenda() {
 
 function renderRecent() {
   const items = noticeItems();
-  // 首頁只放近一個月（今天起 30 天內開始）的提醒；完整清單在「查看全部」通知面板
-  const horizon = addDaysKey(localDateKey(new Date()), 30);
-  const recent = items.filter((item) => item.sortDate <= horizon);
-  el("recentList").innerHTML = recent.slice(0, 5).map(noticeItemTemplate).join("")
-    || '<div class="empty-state">近一個月內沒有停課、模考或備註。</div>';
+  // 首頁顯示最近的前 5 筆重要通知，取自與「查看全部」同一份清單（noticeItems），確保兩邊一致；
+  // 不另設日期視窗，避免「首頁說沒有、查看全部卻有」的不一致。完整清單在通知面板。
+  el("recentList").innerHTML = items.slice(0, 5).map(noticeItemTemplate).join("")
+    || '<div class="empty-state">目前沒有停課、模考或備註等重要通知。</div>';
   el("noticeList").innerHTML = items.map(noticeItemTemplate).join("")
     || '<div class="empty-state">目前沒有通知。</div>';
 }
@@ -1845,7 +1844,7 @@ function colorOf(event) {
   if (isMockEvent(event)) return TYPE_COLORS["模考與複習"];
   if (event.type === "停課") return TYPE_COLORS["停課"];
   if (event.type === "備註") return TYPE_COLORS["備註"];
-  if (event.type === "重要日程") return TYPE_COLORS["重要提醒"];
+  if (event.type === "重要日程") return TYPE_COLORS["重要日程"];
   return SUBJECT_COLORS[groupSubject(event.subject)] || TYPE_COLORS[event.type] || "#607d8b";
 }
 
