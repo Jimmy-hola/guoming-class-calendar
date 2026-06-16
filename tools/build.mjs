@@ -74,6 +74,17 @@ function normalizeRowDates(row) {
 
 const readData = (name) => parseCSV(readFileSync(join(ROOT, "data", name), "utf8")).map(normalizeRowDates);
 
+function publicDetail(text) {
+  return String(text || "")
+    .split("\n")
+    .map((line) => line
+      .replace(/（[^）]*\.csv[^）]*）/g, "")
+      .replace(/\([^)]*\.csv[^)]*\)/g, "")
+      .trim())
+    .filter((line) => line && !/\.csv/.test(line))
+    .join("\n");
+}
+
 // ---------- 讀取資料 ----------
 const config = Object.fromEntries(readData("設定.csv").map((r) => [r.key, r.value]));
 const timetable = readData("課表.csv");
@@ -90,6 +101,11 @@ if (!START || !END) throw new Error("設定.csv 缺少 課表生效日 或 行�
 const PUBLISH_THROUGH = config["公布截止日"] || END;
 const EFFECTIVE_END = PUBLISH_THROUGH < END ? PUBLISH_THROUGH : END;
 const PRINT_THROUGH = config["紙本公布截止日"] || PUBLISH_THROUGH;
+// 重要通知的顯示視窗（天）：首頁較短、查看全部較長；可在 設定.csv 調整，留空用預設
+const NOTICE_DAYS_HOME = Number(config["首頁通知天數"]) || 14;
+const NOTICE_DAYS_ALL = Number(config["通知面板天數"]) || 30;
+// 「釘選」：某筆 pinned 欄填 是/1/Y/✓ 時，不論多遠都常駐在通知裡（仍只顯示今天以後）
+const truthy = (v) => /^(1|是|true|y|yes|✓|v|t)$/i.test(String(v || "").trim());
 
 const WEEKDAYS = ["日", "一", "二", "三", "四", "五", "六"];
 const fmt = (d) => d.toISOString().slice(0, 10);
@@ -206,13 +222,14 @@ for (const r of mockExams) {
     end: `${r.date}T${endT}`,
     type: "高名模考",
     subject: r.subject,
-    detail: [
+    detail: publicDetail([
       `範圍：${r.range}`,
       r.paper_provider && `卷別：${r.paper_provider}`,
       r.official_date && `官方模考日 ${r.official_date}（${weekdayOf(r.official_date)}），本班提前於當週一～五晚上測驗及輔導時段考完`,
       r.notes && `備註：${r.notes}`,
       "（日期若調整，改 data/高名模考.csv 對應列）",
-    ].filter(Boolean).join("\n"),
+    ].filter(Boolean).join("\n")),
+    ...(truthy(r.pinned) ? { pinned: true } : {}),
   });
 }
 
@@ -255,7 +272,7 @@ if (summerMockStart) {
       allDay: true,
       type: "暑訓",
       subject: m.subject,
-      detail: `時間：${t1}～${t2}（僅參加暑訓的學生）\n範圍：${m.range}\n（暑訓模考週日期若調整，改 設定.csv 的「暑訓模考週開始」）`,
+      detail: publicDetail(`時間：${t1}～${t2}（僅參加暑訓的學生）\n範圍：${m.range}`),
     });
   });
 }
@@ -270,7 +287,8 @@ for (const r of specialDays) {
     allDay: true,
     type: r.type === "停課" ? "停課" : "備註",
     subject: "",
-    detail: r.notes || "",
+    detail: publicDetail(r.notes),
+    ...(truthy(r.pinned) ? { pinned: true } : {}),
   });
 }
 
@@ -285,7 +303,9 @@ for (const r of importantDays) {
     allDay: true,
     type: "重要日程",
     subject: "",
-    detail: r.notes || "",
+    ...(r["短標籤"] ? { short_label: r["短標籤"] } : {}),
+    detail: publicDetail(r.notes),
+    ...(truthy(r.pinned) ? { pinned: true } : {}),
   });
 }
 
@@ -311,6 +331,8 @@ const out = {
   full_end: END,
   publish_through: PUBLISH_THROUGH,
   print_through: PRINT_THROUGH,
+  notice_days_home: NOTICE_DAYS_HOME,
+  notice_days_all: NOTICE_DAYS_ALL,
   timetable,
   summer_info,
   events: publishedEvents,

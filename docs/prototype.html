@@ -1683,17 +1683,26 @@ function renderAgenda() {
 }
 
 function renderRecent() {
-  const items = noticeItems();
-  // 首頁顯示最近的前 5 筆重要通知，取自與「查看全部」同一份清單（noticeItems），確保兩邊一致；
-  // 不另設日期視窗，避免「首頁說沒有、查看全部卻有」的不一致。完整清單在通知面板。
-  el("recentList").innerHTML = items.slice(0, 5).map(noticeItemTemplate).join("")
-    || '<div class="empty-state">目前沒有停課、模考或備註等重要通知。</div>';
-  el("noticeList").innerHTML = items.map(noticeItemTemplate).join("")
+  // 首頁與「查看全部」用不同的天數視窗（設定.csv：首頁通知天數／通知面板天數），
+  // 被釘選的通知不受天數限制、兩邊都會出現。視窗天數放寬時請同步調整 設定.csv。
+  const homeItems = noticeItems(noticeDaysHome());
+  const allItems = noticeItems(noticeDaysAll());
+  el("recentList").innerHTML = homeItems.map(noticeItemTemplate).join("")
+    || '<div class="empty-state">近期沒有停課、模考或備註等重要通知。</div>';
+  el("noticeList").innerHTML = allItems.map(noticeItemTemplate).join("")
     || '<div class="empty-state">目前沒有通知。</div>';
 }
 
+function noticeDaysHome() {
+  return Number(state.data && state.data.notice_days_home) || 14;
+}
+
+function noticeDaysAll() {
+  return Number(state.data && state.data.notice_days_all) || 30;
+}
+
 function updateNoticeBadge() {
-  const count = noticeItems().length;
+  const count = noticeItems(noticeDaysAll()).length;
   el("noticeBadge").textContent = count > 9 ? "9+" : String(count);
 }
 
@@ -1784,19 +1793,26 @@ function mockRounds() {
       events,
       startDate: events[0].startDate,
       endDate: events[events.length - 1].startDate,
+      pinned: events.some((event) => event.pinned),
     };
   }).sort((a, b) => a.startDate.localeCompare(b.startDate));
 }
 
-// 重要提醒清單：高名模考每回一筆，其餘（停課/備註/重要日程）逐筆
-function noticeItems() {
+// 重要提醒清單：高名模考每回一筆，其餘（停課/備註/重要日程）逐筆。
+// maxDays = 只列今天起算這麼多天內的通知（首頁短、查看全部長）；不傳則不限上界。
+// 釘選（pinned）的通知不受 maxDays 限制，永遠常駐（仍只顯示今天以後的）。
+function noticeItems(maxDays) {
+  const horizon = maxDays ? addDaysKey(state.defaultDate, maxDays) : null;
+  const within = (sortDate, pinned) => pinned || !horizon || sortDate <= horizon;
   const rounds = mockRounds()
     .filter((round) => round.endDate >= state.defaultDate)
-    .map((round) => ({ kind: "round", round, sortDate: round.startDate }));
+    .map((round) => ({ kind: "round", round, sortDate: round.startDate, pinned: !!round.pinned }))
+    .filter((item) => within(item.sortDate, item.pinned));
   const others = state.events
     .filter((event) => isNoticeEvent(event) && !isMockEvent(event))
     .filter((event) => event.startDate >= state.defaultDate || (event.allDay && event.endDate > state.defaultDate))
-    .map((event) => ({ kind: "event", event, sortDate: event.startDate }));
+    .map((event) => ({ kind: "event", event, sortDate: event.startDate, pinned: !!event.pinned }))
+    .filter((item) => within(item.sortDate, item.pinned));
   return [...rounds, ...others].sort((a, b) => a.sortDate.localeCompare(b.sortDate));
 }
 
@@ -1879,9 +1895,20 @@ function tagText(event) {
   if (isReviewEvent(event)) return groupSubject(event.subject || "複習");
   if (event.type === "停課") return "停課";
   if (event.type === "備註") return "備註";
-  if (event.type === "重要日程") return "重要";
+  if (event.type === "重要日程") return importantMonthLabel(event);
   if (event.type === "暑訓") return "暑訓";
   return groupSubject(event.subject || event.type);
+}
+
+function importantMonthLabel(event) {
+  if (event.short_label) return event.short_label;
+  const title = cleanTitle(event)
+    .replace(/[（(][^）)]*[）)]/g, "")
+    .replace(/\b\d{1,2}:\d{2}[–~-]\d{1,2}:\d{2}\b/g, "")
+    .trim();
+  if (title.includes("啟用新課表")) return "新課表";
+  if (title.includes("第一堂")) return title.replace("第一堂課", "").replace("第一堂", "").slice(0, 4) || "開課";
+  return title.slice(0, 4) || "日程";
 }
 
 function noticeLabel(event) {
