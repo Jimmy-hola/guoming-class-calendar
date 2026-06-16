@@ -1,6 +1,6 @@
 {
  "site_title": "高名一心 國三行事曆",
- "generated_at": "2026/6/16 20:49:48",
+ "generated_at": "2026/6/16 20:57:19",
  "range": {
   "start": "2026-06-26",
   "end": "2026-08-31"
@@ -84,7 +84,7 @@
    "start_time": "09:30",
    "end_time": "11:00",
    "subject": "",
-   "activity": "國社輔測"
+   "activity": "國社輔測（含國文複習卷，依老師上課進度）"
   },
   {
    "weekday": "六",
