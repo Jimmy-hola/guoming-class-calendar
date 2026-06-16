@@ -3,11 +3,34 @@
 // 用法：node tools/build.mjs
 // 行事曆只顯示三大類：暑訓（含暑訓模考）、複習卷＋高名模考、重要日程（含停課與備註）。
 // 每週固定課表（正課、測驗及輔導等）不上行事曆，改由網頁的「課表」視窗顯示（資料一樣來自 課表.csv）。
-import { readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
+const DATA_DIR = join(ROOT, "data");
+const RED = "\x1b[31m", YELLOW = "\x1b[33m", RESET = "\x1b[0m";
+
+// ---------- 前置檢查：BOM 自動修補 + 編碼破損偵測 ----------
+// 用 Excel 另存常會弄丟 UTF-8 BOM（Windows 直開變亂碼）或整個存成 Big5。
+// 缺 BOM → 自動補回；偵測到亂碼（U+FFFD）→ 紅字報錯停止，請改存「CSV UTF-8」。
+function preflightEncoding() {
+  const fixed = [];
+  for (const file of readdirSync(DATA_DIR).filter((f) => f.toLowerCase().endsWith(".csv"))) {
+    const path = join(DATA_DIR, file);
+    const text = readFileSync(path, "utf8");
+    if (text.includes("�")) {
+      console.error(`${RED}✗ data/${file} 含亂碼（編碼破損）${RESET}：很可能被 Excel 另存成 Big5。請用「CSV UTF-8（逗號分隔）」格式重新存檔後再 build。`);
+      process.exit(1);
+    }
+    if (!text.startsWith("﻿")) {
+      writeFileSync(path, "﻿" + text, "utf8");
+      fixed.push(file);
+    }
+  }
+  if (fixed.length) console.log(`${YELLOW}🩹 已自動補回 UTF-8 BOM：${fixed.join("、")}${RESET}`);
+}
+preflightEncoding();
 
 // ---------- CSV 解析（RFC4180，支援引號內逗號與換行） ----------
 function parseCSV(text) {
@@ -80,6 +103,65 @@ const weekdayOf = (iso) => WEEKDAYS[new Date(iso + "T00:00:00Z").getUTCDay()];
 // 停課區間
 const closures = specialDays.filter((r) => r.type === "停課");
 const isClosed = (iso) => closures.some((c) => iso >= c.date_start && iso <= (c.date_end || c.date_start));
+
+// ---------- 資料驗證：日期、時間、科目名稱（錯了就紅字停止，不產生 events.json） ----------
+const errors = [];
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+const TIME_RE = /^([01]?\d|2[0-3]):[0-5]\d$/;
+const TIME_FIELDS = new Set(["start_time", "end_time"]);
+const isRealDate = (v) => {
+  if (!DATE_RE.test(v)) return false;
+  const d = new Date(v + "T00:00:00Z");
+  return !Number.isNaN(d.getTime()) && fmt(d) === v;
+};
+
+function checkRowFields(rows, file) {
+  rows.forEach((row, i) => {
+    const lineNo = i + 2; // 第1行是標題
+    for (const [k, v] of Object.entries(row)) {
+      if (!v) continue; // 空值（如可選的 date_end）略過
+      if (DATE_FIELDS.has(k) && !isRealDate(v)) errors.push(`data/${file} 第${lineNo}行 ${k}=「${v}」不是有效的 YYYY-MM-DD 日期`);
+      if (TIME_FIELDS.has(k) && !TIME_RE.test(v)) errors.push(`data/${file} 第${lineNo}行 ${k}=「${v}」不是 HH:MM 時間`);
+    }
+  });
+}
+
+// 科目名稱：複習卷用細科（須與 複習卷清單.csv 一致），暑訓/高名模考用大科
+const catalogSubjects = new Set(reviewCatalog.map((r) => r.subject));
+const BIG_SUBJECTS = new Set(["國文", "英文", "數學", "自然", "社會"]);
+reviewSchedule.forEach((r, i) => {
+  if (r.subject && !catalogSubjects.has(r.subject))
+    errors.push(`data/複習卷進度.csv 第${i + 2}行 科目「${r.subject}」不在 複習卷清單.csv（公民要寫「公民與社會」，且需與清單用字一致）`);
+});
+mockExams.forEach((r, i) => {
+  if (r.subject && !BIG_SUBJECTS.has(r.subject))
+    errors.push(`data/高名模考.csv 第${i + 2}行 科目「${r.subject}」應為 國文/英文/數學/自然/社會`);
+});
+selfStudy.forEach((r, i) => {
+  if (r.subject && !BIG_SUBJECTS.has(r.subject))
+    errors.push(`data/暑訓進度.csv 第${i + 2}行 科目「${r.subject}」應為 國文/英文/數學/自然/社會`);
+});
+
+// 各檔的日期/時間欄位
+checkRowFields(reviewCatalog, "複習卷清單.csv");
+checkRowFields(reviewSchedule, "複習卷進度.csv");
+checkRowFields(selfStudy, "暑訓進度.csv");
+checkRowFields(mockExams, "高名模考.csv");
+checkRowFields(specialDays, "特殊日.csv");
+checkRowFields(importantDays, "重要日程.csv");
+checkRowFields(timetable, "課表.csv");
+
+// 設定.csv 的關鍵日期
+for (const key of ["課表生效日", "行事曆結束日", "公布截止日", "紙本公布截止日", "暑訓模考週開始"]) {
+  const v = config[key];
+  if (v && !isRealDate(normalizeDate(v))) errors.push(`data/設定.csv ${key}=「${v}」不是有效的 YYYY-MM-DD 日期`);
+}
+
+if (errors.length) {
+  console.error(`\n${RED}✗ 資料檢查未通過（${errors.length} 項），已停止，未變更 docs/events.json。請修正後再 build：${RESET}`);
+  for (const e of errors) console.error(`${RED}  • ${e}${RESET}`);
+  process.exit(1);
+}
 
 const events = [];
 
