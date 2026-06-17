@@ -184,12 +184,16 @@ const events = [];
 // ---------- 1. 複習卷進度 ----------
 const catalogIndex = new Map(reviewCatalog.map((r) => [`${r.subject}|${Number(r.round_no)}`, r]));
 const missingRounds = [];
+function reviewTitle(row, catalogRow) {
+  if (row.subject === "國文") return `${row.subject}複習卷`;
+  return `${row.subject}複習卷 ${catalogRow.round_label}`;
+}
 for (const r of reviewSchedule) {
   const cat = catalogIndex.get(`${r.subject}|${Number(r.round_no)}`);
   if (!cat) { missingRounds.push(`${r.subject} 第${r.round_no}回`); continue; }
   const scope = cat.chapter_or_scope || cat.scope_detail || "";
   events.push({
-    title: `${r.subject}複習卷 ${cat.round_label}`,
+    title: reviewTitle(r, cat),
     start: `${r.date}T${r.start_time}`,
     end: `${r.date}T${r.end_time}`,
     type: "複習卷",
