@@ -1913,7 +1913,7 @@ function importantMonthLabel(event) {
 
 function noticeLabel(event) {
   if (isMockEvent(event)) return "模考";
-  if (event.type === "重要日程") return "重要日程";
+  if (event.type === "重要日程") return importantMonthLabel(event);
   return event.type;
 }
 
