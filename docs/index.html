@@ -1406,6 +1406,46 @@ const state = {
 
 const el = (id) => document.getElementById(id);
 
+// 匿名點擊日誌：把點擊送到 設定.csv 設定的 Google Apps Script 端點（留空＝不記錄）。
+// 不含任何個資；sessionId 只是 localStorage 裡的隨機碼，用來分辨「幾台裝置」。
+function logSessionId() {
+  try {
+    let id = localStorage.getItem("calLogSession");
+    if (!id) {
+      id = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2));
+      localStorage.setItem("calLogSession", id);
+    }
+    return id;
+  } catch {
+    return "no-storage";
+  }
+}
+
+function logClick(action, detail) {
+  try {
+    const endpoint = state.data && state.data.click_log_endpoint;
+    if (!endpoint) return; // 未設定端點就完全不動作
+    const body = JSON.stringify({
+      session: logSessionId(),
+      action: action || "",
+      detail: detail || {},
+      view: state.view,
+      screenW: window.screen ? window.screen.width : null,
+      lang: navigator.language || "",
+      referrer: document.referrer || "",
+    });
+    fetch(endpoint, {
+      method: "POST",
+      mode: "no-cors", // 不需讀回應，避免 CORS preflight
+      keepalive: true, // 即使點擊後馬上換頁也送得出去
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body,
+    }).catch(() => {});
+  } catch {
+    // 記錄失敗絕不影響網頁功能
+  }
+}
+
 fetch("events.json?v=" + Date.now())
   .then((response) => {
     if (!response.ok) throw new Error("events.json load failed");
@@ -1418,6 +1458,7 @@ fetch("events.json?v=" + Date.now())
     state.selectedDate = state.defaultDate;
     hydrateStatic(data);
     render();
+    logClick("page-open", { view: state.view });
   })
   .catch((error) => {
     el("todayEvents").innerHTML = '<div class="empty-state">行事曆資料載入失敗，請重新整理後再試。</div>';
@@ -2107,6 +2148,7 @@ document.addEventListener("click", async (event) => {
   const trigger = event.target.closest("[data-action]");
   if (!trigger) return;
   const action = trigger.dataset.action;
+  logClick(action, { ...trigger.dataset });
 
   if (action === "open-menu") openPanel("menuDrawer");
   if (action === "open-notices") openPanel("noticeSheet");

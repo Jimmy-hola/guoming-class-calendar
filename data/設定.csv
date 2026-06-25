@@ -9,3 +9,4 @@
 紙本公布截止日,2026-07-31,紙本(print.html)只印到此月；通常比網頁更近，留空則同公布截止日
 首頁通知天數,14,首頁「重要通知」只列未來幾天內（含今天）的通知；留空預設 14 天
 通知面板天數,30,「查看全部」通知面板只列未來幾天內的通知；留空預設 30 天。被釘選(pinned)的通知不受天數限制
+點擊日誌端點,https://script.google.com/macros/s/AKfycbzfNY9CRr7q81E5RCzpasUeHp43H1Izo3cy0HM0SftSiyQrjYfnt6kPm0rFc2UsLi--/exec,留空＝不記錄點擊；貼上 Google Apps Script 部署的 exec 網址即可開始把點擊寫進你的 Google 試算表

@@ -337,6 +337,7 @@ const out = {
   print_through: PRINT_THROUGH,
   notice_days_home: NOTICE_DAYS_HOME,
   notice_days_all: NOTICE_DAYS_ALL,
+  click_log_endpoint: config["點擊日誌端點"] || "",
   timetable,
   summer_info,
   events: publishedEvents,
