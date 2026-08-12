@@ -5,10 +5,14 @@
 // 每週固定課表（正課、測驗及輔導等）不上行事曆，改由網頁的「課表」視窗顯示（資料一樣來自 課表.csv）。
 import { readFileSync, writeFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { dirname, join } from "node:path";
+import { dirname, join, resolve } from "node:path";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
-const DATA_DIR = join(ROOT, "data");
+// 預覽流程可指定暫存資料夾與輸出檔；日常直接執行時仍使用 repo 內的 data/ 與 docs/events.json。
+const DATA_DIR = process.env.CALENDAR_DATA_DIR ? resolve(process.env.CALENDAR_DATA_DIR) : join(ROOT, "data");
+const OUTPUT_FILE = process.env.CALENDAR_OUTPUT_FILE
+  ? resolve(process.env.CALENDAR_OUTPUT_FILE)
+  : join(ROOT, "docs", "events.json");
 const RED = "\x1b[31m", YELLOW = "\x1b[33m", RESET = "\x1b[0m";
 
 // ---------- 前置檢查：BOM 自動修補 + 編碼破損偵測 ----------
@@ -72,7 +76,7 @@ function normalizeRowDates(row) {
   );
 }
 
-const readData = (name) => parseCSV(readFileSync(join(ROOT, "data", name), "utf8")).map(normalizeRowDates);
+const readData = (name) => parseCSV(readFileSync(join(DATA_DIR, name), "utf8")).map(normalizeRowDates);
 
 function publicDetail(text) {
   return String(text || "")
@@ -144,14 +148,14 @@ function checkRowFields(rows, file) {
 
 // 科目名稱：複習卷用細科（須與 複習卷清單.csv 一致），暑訓/高名模考用大科
 const catalogSubjects = new Set(reviewCatalog.map((r) => r.subject));
-const BIG_SUBJECTS = new Set(["國文", "英文", "數學", "自然", "社會"]);
+const BIG_SUBJECTS = new Set(["作文", "國文", "英文", "數學", "自然", "社會"]);
 reviewSchedule.forEach((r, i) => {
   if (r.subject && !catalogSubjects.has(r.subject))
     errors.push(`data/複習卷進度.csv 第${i + 2}行 科目「${r.subject}」不在 複習卷清單.csv（公民要寫「公民與社會」，且需與清單用字一致）`);
 });
 mockExams.forEach((r, i) => {
   if (r.subject && !BIG_SUBJECTS.has(r.subject))
-    errors.push(`data/高名模考.csv 第${i + 2}行 科目「${r.subject}」應為 國文/英文/數學/自然/社會`);
+    errors.push(`data/高名模考.csv 第${i + 2}行 科目「${r.subject}」應為 作文/國文/英文/數學/自然/社會`);
 });
 selfStudy.forEach((r, i) => {
   if (r.subject && !BIG_SUBJECTS.has(r.subject))
@@ -212,16 +216,15 @@ const MOCK_SUBJECTS = [
   { subject: "社會", range: "B1~B2" },
 ];
 
-// ---------- 2. 高名模考（全班，一～五晚上「測驗及輔導／輔測」時段） ----------
-// 每回官方日期為週日，本班提前於該週一～五考完（一國二英三數四自五社），逐場日期在 data/高名模考.csv
+// ---------- 2. 高名模考（全班；有明填時間就採用，舊資料才依固定課表推算） ----------
 for (const r of mockExams) {
   const wd = weekdayOf(r.date);
   const slot = timetable.find((t) => t.weekday === wd && (t.activity === "測驗及輔導" || t.activity === "輔測"));
-  const startT = slot ? slot.start_time : "19:30";
-  const endT = slot ? slot.end_time : "20:30";
+  const startT = r.start_time || (slot ? slot.start_time : "19:30");
+  const endT = r.end_time || (slot ? slot.end_time : "20:30");
   if (isClosed(r.date)) console.warn(`⚠️ 高名模考 ${r.date} ${r.subject}（${r.round_label}）落在停課日，請調整 高名模考.csv`);
   events.push({
-    title: `${r.subject}高名模考 ${r.round_label}（${r.range}）`,
+    title: r.title || `${r.subject}高名模考 ${r.round_label}（${r.range}）`,
     start: `${r.date}T${startT}`,
     end: `${r.date}T${endT}`,
     type: "高名模考",
@@ -229,9 +232,9 @@ for (const r of mockExams) {
     detail: publicDetail([
       `範圍：${r.range}`,
       r.paper_provider && `卷別：${r.paper_provider}`,
-      r.official_date && `官方模考日 ${r.official_date}（${weekdayOf(r.official_date)}），本班提前於當週一～五晚上測驗及輔導時段考完`,
+      r.official_date && `官方模考日 ${r.official_date}（${weekdayOf(r.official_date)}）；本班實際考程以上列日期與時間為準`,
       r.notes && `備註：${r.notes}`,
-      "（日期若調整，改 data/高名模考.csv 對應列）",
+      "（考程由班務系統確認後發布）",
     ].filter(Boolean).join("\n")),
     ...(truthy(r.pinned) ? { pinned: true } : {}),
   });
@@ -342,5 +345,5 @@ const out = {
   summer_info,
   events: publishedEvents,
 };
-writeFileSync(join(ROOT, "docs", "events.json"), JSON.stringify(out, null, 1), "utf8");
+writeFileSync(OUTPUT_FILE, JSON.stringify(out, null, 1), "utf8");
 console.log(`✅ 已產出 docs/events.json：已公布至 ${EFFECTIVE_END}（完整排程至 ${END}），公布 ${publishedEvents.length}/${events.length} 筆事件`);

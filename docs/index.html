@@ -1622,7 +1622,7 @@ function renderMonth() {
       singles.set(event.startDate, list);
     }
   });
-  // 高名模考：每回（一～五）合併畫一條紅色條，不逐日放標籤
+  // 高名模考：依每回實際起訖日合併畫一條紅色條，不逐日放標籤
   mockRounds().forEach((round) => {
     bars.push({ start: round.startDate, endExcl: addDaysKey(round.endDate, 1), color: TYPE_COLORS["模考與複習"], label: `模考${round.label}`, date: round.startDate });
   });
@@ -1805,7 +1805,7 @@ function mockRoundTemplate(round) {
   return `
     <button class="recent-item" type="button" data-action="open-round" data-round="${escapeAttr(round.label)}" style="--event-color:${TYPE_COLORS["模考與複習"]}">
       <span class="recent-kind"><i data-lucide="file-check-2"></i></span>
-      <span class="recent-text">【模考】高名模考 ${escapeHTML(round.label)}（一～五晚）</span>
+      <span class="recent-text">【模考】高名模考 ${escapeHTML(round.label)}（依行事曆時段）</span>
       <span class="recent-date">${formatMonthDay(round.startDate)}–${formatMonthDay(round.endDate)}</span>
       <span class="chevron"><i data-lucide="chevron-right" size="18"></i></span>
     </button>`;
@@ -2099,7 +2099,7 @@ function openEvent(id) {
 function openMockRound(label) {
   const round = mockRounds().find((item) => item.label === label);
   if (!round) return;
-  const time = `${formatLongDate(round.startDate)} – ${formatLongDate(round.endDate)}　晚上測驗及輔導時段`;
+  const time = `${formatLongDate(round.startDate)} – ${formatLongDate(round.endDate)}　實際時段如下`;
   const lines = round.events.map((event) => {
     const scope = extractDetail(event.detail, "範圍");
     const note = extractDetail(event.detail, "備註");
@@ -2111,7 +2111,7 @@ function openMockRound(label) {
   const paper = extractDetail(round.events[0].detail, "卷別");
   const official = (round.events[0].detail || "").match(/官方模考日 (\d{4}-\d{2}-\d{2})/);
   if (paper) lines.push(`卷別：${paper}`);
-  if (official) lines.push(`官方模考日 ${formatMonthDay(official[1])}（日），本班提前於當週一～五晚上考完`);
+  if (official) lines.push(`官方模考日 ${formatMonthDay(official[1])}（日），本班實際考程如上`);
   el("modalTag").textContent = "模考";
   el("modalTag").style.background = TYPE_COLORS["模考與複習"];
   el("modalTitle").textContent = `高名模考 ${round.label}`;
