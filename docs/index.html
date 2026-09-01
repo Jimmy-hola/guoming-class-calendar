@@ -1476,7 +1476,15 @@ function hydrateStatic(data) {
 }
 
 function renderTimetable(data) {
-  el("ttSub").textContent = "自 " + formatShortDate(data.range.start) + " 起適用，每週循環";
+  const localToday = new Date().toLocaleDateString("sv");
+  const versions = data.timetables || [];
+  const version = versions.filter((item) => item.effective_from <= localToday && (!item.effective_to || item.effective_to >= localToday)).at(-1)
+    || versions.filter((item) => item.effective_from <= localToday).at(-1)
+    || versions[0] || null;
+  const timetableRows = version ? version.rows : (data.timetable || []);
+  el("ttSub").textContent = version
+    ? `${version.name}｜${formatShortDate(version.effective_from)}${version.effective_to ? `～${formatShortDate(version.effective_to)}` : " 起"}適用，每週循環`
+    : "自 " + formatShortDate(data.range.start) + " 起適用，每週循環";
   let html = "";
   if (data.summer_info) {
     const si = data.summer_info;
@@ -1486,7 +1494,7 @@ function renderTimetable(data) {
   }
   const order = ["一", "二", "三", "四", "五", "六", "日"];
   order.forEach((wd) => {
-    const rows = (data.timetable || []).filter((row) => row.weekday === wd);
+    const rows = timetableRows.filter((row) => row.weekday === wd);
     if (!rows.length) return;
     const weekend = wd === "六" || wd === "日";
     html += `<section class="tt-day${weekend ? " weekend" : ""}"><div class="tt-day-head">週${wd}</div>` +

@@ -3,7 +3,7 @@
 // 用法：node tools/build.mjs
 // 行事曆只顯示三大類：暑訓（含暑訓模考）、複習卷＋高名模考、重要日程（含停課與備註）。
 // 每週固定課表（正課、測驗及輔導等）不上行事曆，改由網頁的「課表」視窗顯示（資料一樣來自 課表.csv）。
-import { readFileSync, writeFileSync, readdirSync } from "node:fs";
+import { readFileSync, writeFileSync, readdirSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";
 
@@ -62,7 +62,7 @@ function parseCSV(text) {
   return rows.map((r) => Object.fromEntries(header.map((h, i) => [h.trim(), (r[i] ?? "").trim()])));
 }
 
-const DATE_FIELDS = new Set(["date", "date_start", "date_end", "official_date"]);
+const DATE_FIELDS = new Set(["date", "date_start", "date_end", "official_date", "effective_from", "effective_to"]);
 
 function normalizeDate(value) {
   const m = String(value || "").trim().match(/^(\d{4})[/-](\d{1,2})[/-](\d{1,2})$/);
@@ -92,6 +92,8 @@ function publicDetail(text) {
 // ---------- 讀取資料 ----------
 const config = Object.fromEntries(readData("設定.csv").map((r) => [r.key, r.value]));
 const timetable = readData("課表.csv");
+const timetableVersionFile = join(DATA_DIR, "課表版本.csv");
+const timetableVersionRows = existsSync(timetableVersionFile) ? readData("課表版本.csv") : [];
 const selfStudy = readData("暑訓進度.csv");
 const specialDays = readData("特殊日.csv");
 const reviewCatalog = readData("複習卷清單.csv");
@@ -170,6 +172,7 @@ checkRowFields(mockExams, "高名模考.csv");
 checkRowFields(specialDays, "特殊日.csv");
 checkRowFields(importantDays, "重要日程.csv");
 checkRowFields(timetable, "課表.csv");
+checkRowFields(timetableVersionRows, "課表版本.csv");
 
 // 設定.csv 的關鍵日期
 for (const key of ["課表生效日", "行事曆結束日", "公布截止日", "紙本公布截止日", "暑訓模考週開始"]) {
@@ -342,6 +345,14 @@ const out = {
   notice_days_all: NOTICE_DAYS_ALL,
   click_log_endpoint: config["點擊日誌端點"] || "",
   timetable,
+  timetables: [...new Map(timetableVersionRows.map((row) => [row.version_name, {
+    name: row.version_name, effective_from: row.effective_from, effective_to: row.effective_to, rows: [],
+  }])).values()].map((version) => ({
+    ...version,
+    rows: timetableVersionRows.filter((row) => row.version_name === version.name).map((row) => ({
+      weekday: row.weekday, start_time: row.start_time, end_time: row.end_time, subject: row.subject, activity: row.activity,
+    })),
+  })),
   summer_info,
   events: publishedEvents,
 };
